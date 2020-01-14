@@ -5,7 +5,7 @@ const importJsx = require('import-jsx');
 const {render} = require('ink');
 const meow = require('meow');
 
-const ui = importJsx('./ui');
+const ui = importJsx('./ui.jsx');
 
 const cli = meow(`
 	Usage
@@ -18,4 +18,6 @@ const cli = meow(`
 	  $ cleevio-tempo-cli --token=[Token]
 `);
 
-render(React.createElement(ui, cli.flags));
+render(React.createElement(ui, cli.flags), { 
+	debug: false,
+});
