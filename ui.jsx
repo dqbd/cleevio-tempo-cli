@@ -159,8 +159,8 @@ function Tracker({ tracker, selected, onUpdate, token, now, row }) {
 const NewTimer = ({ selected, token, onCreate }) => {
 	const [loading, setLoading] = React.useState(false)
 
-	useInput(async (_, key) => {
-		if (key.return && selected) {
+	useInput(async (key) => {
+		if ((key.return && selected)) {
 			setLoading(true)
 			onCreate(await createTracker(token))
 			setLoading(false)
