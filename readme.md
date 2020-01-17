@@ -6,6 +6,14 @@
 
 Add your auth key obtained from [Tempo Settings](https://cleevio.atlassian.net/plugins/servlet/ac/io.tempo.jira/tempo-configuration)
 
+
+## Build
+
+```bash
+yarn
+yarn parcel --target=node cli.js
+```
+
 ## Install
 
 ```bash

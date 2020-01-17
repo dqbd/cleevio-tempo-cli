@@ -1,11 +1,8 @@
-#!/usr/bin/env node
-'use strict';
-const React = require('react');
-const importJsx = require('import-jsx');
-const {render} = require('ink');
-const meow = require('meow');
-
-const ui = importJsx('./ui.jsx');
+"use strict"
+import React from "react"
+import { render } from "ink"
+import meow from "meow"
+import { App } from './src/components/App'
 
 const cli = meow(`
 	Usage
@@ -16,8 +13,8 @@ const cli = meow(`
 
 	Examples
 	  $ cleevio-tempo-cli --token=[Token]
-`);
+`)
 
-render(React.createElement(ui, cli.flags), { 
-	debug: false,
-});
+render(React.createElement(App, cli.flags), {
+	debug: false
+})
