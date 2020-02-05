@@ -1,15 +1,15 @@
 {
 	"name": "cleevio-tempo-cli",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"license": "MIT",
 	"bin": "dist/index.js",
 	"engines": {
 		"node": ">=8"
 	},
 	"scripts": {
-		"dev": "yarn parcel --target=node --public-url=. src/index.js",
-		"build": "yarn parcel build --target=node --public-url=. src/index.js",
-		"binaries": "yarn pkg --targets node12-linux,node12-macos,node12-win --out-path bin/ package.json "
+		"dev": "yarn parcel --target=node src/index.js",
+		"build": "yarn parcel build --target=node src/index.js",
+		"binaries": "yarn pkg --out-path bin/ package.json"
 	},
 	"dependencies": {
 		"@reduxjs/toolkit": "^1.2.2",
@@ -37,6 +37,13 @@
 	"babel": {
 		"presets": [
 			"@babel/preset-react"
+		]
+	},
+	"pkg": {
+		"targets": [
+			"node12-win",
+			"node12-linux",
+			"node12-macos"
 		]
 	},
 	"prettier": {

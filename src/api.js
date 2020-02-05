@@ -20,7 +20,7 @@ export async function getTrackers(token) {
   }).then(a => a.json())
 }
 
-export async function createTracker(token) {
+export async function createTracker(token, payload = {}) {
   return fetch("https://api.tempo.io/trackers/v1/", {
     method: "POST",
     headers: {
@@ -28,7 +28,8 @@ export async function createTracker(token) {
       authorization: `Bearer ${token}`
     },
     body: JSON.stringify({
-      isPlaying: true
+      isPlaying: true,
+      ...payload,
     })
   }).then(a => a.json())
 }

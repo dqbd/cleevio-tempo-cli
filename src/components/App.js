@@ -20,7 +20,7 @@ class ErrorBoundary extends React.Component {
 
 export const App = ({ token }) => {
   if (!token) {
-    return <Text>--token is required</Text>
+    return <Text>Error: --token is required</Text>
   }
 
   return (

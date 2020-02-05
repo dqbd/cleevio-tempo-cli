@@ -90,7 +90,11 @@ export const List = () => {
 
   return (
     <Box flexGrow={1}>
-      {trackers === false && <Text><Spinner type="dots" /> Loading your trackers</Text>}
+      {trackers === false && (
+        <Text>
+          <Spinner type="dots" /> Loading your trackers
+        </Text>
+      )}
       {trackers !== false && (
         <Box flexDirection="column" flexGrow={1}>
           {trackers.map((tracker, index) => {
@@ -109,6 +113,7 @@ export const List = () => {
           <NewTimer
             selected={selected === (trackers || []).length}
             onCreate={handleCreate}
+            onArrowFreeze={setArrowFreeze}
           />
         </Box>
       )}

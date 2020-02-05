@@ -145,7 +145,11 @@ export function Tracker({
           <Description
             value={search}
             onChange={handleSearchChange}
-            placeholder={tracker?.issueKey || "None"}
+            placeholder={
+              (tracker?.issueKey &&
+                `${tracker.issueKey}${toggleIssue ? " (open browser)" : ""}`) ||
+              (toggleIssue ? "type an issue..." : "...")
+            }
             focus={toggleIssue}
           />
         </Color>

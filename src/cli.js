@@ -24,4 +24,5 @@ const { waitUntilExit } = render(
 
 waitUntilExit().catch(error => {
   console.error(error)
+  return Promise.reject(error)
 }) 
