@@ -10,6 +10,7 @@ const cli = meow(`
 
   Options
     --token  Your Tempo API Token
+    --debug  Toggle debug mode
 
   Examples
     $ cleevio-tempo-cli --token=[Token]
@@ -17,7 +18,7 @@ const cli = meow(`
 
 const { waitUntilExit } = render(
   React.createElement(App, cli.flags), {
-    debug: false
+    debug: cli.flags.debug
   }
 )
 

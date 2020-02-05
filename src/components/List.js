@@ -2,14 +2,14 @@
 import React, { useContext } from "react"
 import { Tracker } from "./Tracker"
 import { NewTimer } from "./NewTimer"
-import { useInterval, useIsMounted } from "../hooks"
+import { useInterval, useIsMounted, useActiveInput } from "../hooks"
 
-import { Text, Box, useInput, useApp } from "ink"
+import { Text, Box, useApp } from "ink"
 import { getTrackers } from "../api"
 import { stateOrder, SELECT_ROW } from "../constants"
-import { parseDate } from '../utils'
-import { TokenContext } from '../context'
-
+import { parseDate } from "../utils"
+import { TokenContext } from "../context"
+import Spinner from "ink-spinner"
 
 export const List = () => {
   const token = useContext(TokenContext)
@@ -58,22 +58,28 @@ export const List = () => {
     [setSortedTrackers, trackers]
   )
 
-  useInput((_, key) => {
-    if (arrowFreeze) return
-
-    const trackersLen = (trackers || []).length
-    if (key.upArrow) {
-      setSelected(Math.max(0, selected - 1))
-    } else if (key.downArrow) {
-      setSelected(Math.min(trackersLen, selected + 1))
-    } else if (key.leftArrow && selected !== trackersLen) {
-      setRow(Math.max(0, row - 1))
-    } else if (key.rightArrow && selected !== trackersLen) {
-      setRow(Math.min(stateOrder.length - 1, row + 1))
+  useActiveInput(
+    (_, key) => {
+      if (key.escape) return exit()
+      const trackersLen = (trackers || []).length
+      if (key.upArrow) {
+        setSelected(Math.max(0, selected - 1))
+      } else if (key.downArrow) {
+        setSelected(Math.min(trackersLen, selected + 1))
+      } else if (key.leftArrow && selected !== trackersLen) {
+        setRow(stateOrder[Math.max(0, stateOrder.indexOf(row) - 1)])
+      } else if (key.rightArrow && selected !== trackersLen) {
+        setRow(
+          stateOrder[
+            Math.min(stateOrder.length - 1, stateOrder.indexOf(row) + 1)
+          ]
+        )
+      }
+    },
+    {
+      active: !arrowFreeze
     }
-  })
-
-  useInput((_, key) => key.escape && exit())
+  )
 
   useInterval(async () => {
     const newTrackers = await getTrackers(token)
@@ -84,7 +90,7 @@ export const List = () => {
 
   return (
     <Box flexGrow={1}>
-      {trackers === false && <Text>Loading your trackers</Text>}
+      {trackers === false && <Text><Spinner type="dots" /> Loading your trackers</Text>}
       {trackers !== false && (
         <Box flexDirection="column" flexGrow={1}>
           {trackers.map((tracker, index) => {

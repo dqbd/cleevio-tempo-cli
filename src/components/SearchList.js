@@ -3,6 +3,8 @@ import SelectInput from "ink-select-input"
 import { useIsMounted } from "../hooks"
 import { getListIssues } from "../api"
 import { TokenContext } from "../context"
+import Spinner from "ink-spinner"
+import { Text } from "ink"
 
 const fetchSearchItems = async (search, token) => {
   const items = await getListIssues(search, token)
@@ -18,27 +20,35 @@ const fetchSearchItems = async (search, token) => {
 
 export function SearchList({ search, onSelect, focus }) {
   const token = useContext(TokenContext)
-
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(false)
   const isMounted = useIsMounted()
   const queryRef = useRef(search)
-  const [items, setItems] = useState([])
+
   const hasSearch = !!(search && search.trim())
 
   useEffect(() => {
     queryRef.current = search
+
     if (hasSearch) {
+      setItems([])
+      setLoading(true)
       fetchSearchItems(search, token).then(payload => {
-        if (queryRef.current === payload.search) {
-          isMounted.current && setItems(payload.items)
+        if (queryRef.current === payload.search && isMounted.current) {
+          setItems(payload.items)
+          setLoading(false)
         }
       })
     } else {
       isMounted.current && setItems([])
     }
-  }, [hasSearch, search, queryRef, isMounted])
+  }, [hasSearch, search, setLoading, queryRef, isMounted])
 
   if (!hasSearch) return null
   return (
-    <SelectInput items={items} focus={focus} onSelect={onSelect} limit={5} />
+    <>
+      {loading && <Text><Spinner type="dots" /> Loading results</Text>}
+      <SelectInput items={items} focus={focus} onSelect={onSelect} limit={5} />
+    </>
   )
 }

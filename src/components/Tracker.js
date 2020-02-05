@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext } from "react"
 import open from "open"
-import { Text, Color, Box, useInput } from "ink"
-import TextInput from "ink-text-input"
+import { Text, Color, Box } from "ink"
 
 import {
   SELECT_ROW,
@@ -11,12 +10,13 @@ import {
   DELETE
 } from "../constants"
 
-import { useIsMounted } from "../hooks"
+import { useIsMounted, useActiveInput, useAsyncEffect } from "../hooks"
 
 import { SearchList } from "./SearchList"
 import { getTimeSpent, centerText } from "../utils"
 import { deleteTracker, updateTracker, toggleTracker } from "../api"
 import { TokenContext } from "../context"
+import { Description } from "./Description"
 
 export function Tracker({
   tracker,
@@ -26,11 +26,51 @@ export function Tracker({
   now,
   row
 }) {
+  const toggleState = selected && row === SELECT_ROW
+  const toggleIssue = selected && row === CHANGE_ISSUE
+  const toggleDesc = selected && row === DESCRIPTION
+  const toggleLog = selected && row === LOG
+  const toggleDelete = selected && row === DELETE
+
   const token = useContext(TokenContext)
   const isMounted = useIsMounted()
   const [loadEvent, setLoadEvent] = useState(null)
   const [search, setSearch] = useState("")
   const [desc, setDesc] = useState("")
+
+  useActiveInput(
+    async (input, key) => {
+      if (key.return || input === " ") {
+        if (toggleState) {
+          setLoadEvent({
+            row: SELECT_ROW,
+            value: tracker.isPlaying ? "STOPPING" : "STARTING"
+          })
+          const newTracker = await toggleTracker(tracker.id, token)
+          onUpdate(newTracker)
+          isMounted.current && setLoadEvent(null)
+        } else if (toggleIssue) {
+          if (!search && tracker.issueKey) {
+            open(`https://cleevio.atlassian.net/browse/${tracker.issueKey}`)
+          }
+        } else if (toggleLog) {
+          open(
+            `https://cleevio.atlassian.net/plugins/servlet/ac/is.origo.jira.tempo-plugin/tempo-my-work#!/tracker/${tracker.id}?redirectUrl=https://cleevio.atlassian.net/jira/your-work`
+          )
+        } else if (toggleDelete) {
+          setLoadEvent({
+            row: DELETE,
+            value: "Deleting"
+          })
+          await deleteTracker(tracker.id, token)
+        }
+      }
+    },
+    {
+      active: !!selected
+    }
+  )
+
   const handleSearchChange = useCallback(
     value => {
       onArrowFreeze(value && value.trim())
@@ -38,38 +78,7 @@ export function Tracker({
     },
     [onArrowFreeze, setSearch]
   )
-  const toggleState = selected && row === SELECT_ROW
-  const toggleIssue = selected && row === CHANGE_ISSUE
-  const toggleDesc = selected && row === DESCRIPTION
-  const toggleLog = selected && row === LOG
-  const toggleDelete = selected && row === DELETE
-  useInput(async (input, key) => {
-    if (key.return || input === " ") {
-      if (toggleState) {
-        setLoadEvent({
-          row: SELECT_ROW,
-          value: tracker.isPlaying ? "STOPPING" : "STARTING"
-        })
-        const newTracker = await toggleTracker(tracker.id, token)
-        onUpdate(newTracker)
-        isMounted.current && setLoadEvent(null)
-      } else if (toggleIssue) {
-        if (!search && tracker.issueKey) {
-          open(`https://cleevio.atlassian.net/browse/${tracker.issueKey}`)
-        }
-      } else if (toggleLog) {
-        open(
-          `https://cleevio.atlassian.net/plugins/servlet/ac/is.origo.jira.tempo-plugin/tempo-my-work#!/tracker/${tracker.id}?redirectUrl=https://cleevio.atlassian.net/jira/your-work`
-        )
-      } else if (toggleDelete) {
-        setLoadEvent({
-          row: DELETE,
-          value: "Deleting"
-        })
-        await deleteTracker(tracker.id, token)
-      }
-    }
-  })
+
   const handleItemSelect = useCallback(
     async item => {
       if (item) {
@@ -87,73 +96,58 @@ export function Tracker({
     },
     [tracker.id, token]
   )
+
   useEffect(() => {
     if (!toggleIssue) handleSearchChange("")
   }, [toggleIssue])
-  useEffect(() => {
+
+  useAsyncEffect(async () => {
     if (!toggleDesc && desc && desc.trim()) {
-      ;(async () => {
-        onUpdate(
-          await updateTracker(
-            tracker.id,
-            {
-              description: desc
-            },
-            token
-          )
+      onUpdate(
+        await updateTracker(
+          tracker.id,
+          {
+            description: desc
+          },
+          token
         )
-        isMounted && setDesc("")
-      })()
+      )
+      if (isMounted.current) setDesc("")
     }
   }, [toggleDesc, isMounted, desc, tracker.id, token, onUpdate])
 
   let state = tracker.isPlaying ? "WORK" : "IDLE"
   if (loadEvent && loadEvent.row === SELECT_ROW) state = loadEvent.value
   state = toggleState ? `[${centerText(state, 8)}]` : centerText(state, 10)
-  
-  let issueKey = tracker.issueKey || "None"
-  issueKey = ` ${issueKey} `
-  
+
   return (
     <Box flexDirection="column">
       <Box key={tracker.id}>
-        <Box marginRight={1}>
-          <Color
-            bgYellow={loadEvent && loadEvent.row === SELECT_ROW}
-            bgGreen={
-              !(loadEvent && loadEvent.row === SELECT_ROW) && tracker.isPlaying
-            }
-            bgBlue={
-              !(loadEvent && loadEvent.row === SELECT_ROW) && !tracker.isPlaying
-            }
-          >
-            <Text bold={toggleState}>{state}</Text>
-          </Color>
-        </Box>
         <Box marginRight={1}>
           <Color dim>
             <Text>{getTimeSpent(tracker.time.trackerDuration, now)}</Text>
           </Color>
         </Box>
-        <Box flexGrow={1} marginRight={1}>
-          <Color bgBlue={toggleIssue}>
-            <TextInput
-              value={search}
-              onChange={handleSearchChange}
-              placeholder={issueKey}
-              focus={toggleIssue}
-            />
-          </Color>
-        </Box>
-
+        <Color
+          bgYellow={loadEvent?.row === SELECT_ROW}
+          bgGreen={!(loadEvent?.row === SELECT_ROW) && tracker.isPlaying}
+          bgBlue={!(loadEvent?.row === SELECT_ROW) && !tracker.isPlaying}
+        >
+          <Text bold={toggleState}>{state}</Text>
+        </Color>
         <Color green={!toggleLog} bgGreen={toggleLog} white={toggleLog}>
-          {centerText("Log", 5)}
+          {` Log Time `.padEnd(10, " ")}
         </Color>
         <Color red={!toggleDelete} bgRed={toggleDelete} white={toggleLog}>
-          {centerText(
-            loadEvent && loadEvent.row === DELETE ? "Deleting" : "Delete",
-            10
-          )}
+          {centerText(loadEvent?.row === DELETE ? "Deleting" : "Delete", 10)}
+        </Color>
+        <Color bgBlue={toggleIssue}>
+          <Description
+            value={search}
+            onChange={handleSearchChange}
+            placeholder={tracker?.issueKey || "None"}
+            focus={toggleIssue}
+          />
         </Color>
       </Box>
       <SearchList

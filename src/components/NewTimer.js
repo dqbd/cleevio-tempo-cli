@@ -1,19 +1,25 @@
 import React, { useContext } from "react"
-import { Text, Box, useInput } from "ink"
+import { Text, Box } from "ink"
 import { createTracker } from "../api"
 import { TokenContext } from "../context"
+import { useActiveInput } from "../hooks"
 
 export const NewTimer = ({ selected, onCreate }) => {
   const token = useContext(TokenContext)
   const [loading, setLoading] = React.useState(false)
 
-  useInput(async (input, key) => {
-    if (key.return && selected) {
-      setLoading(true)
-      onCreate(await createTracker(token))
-      setLoading(false)
+  useActiveInput(
+    async (_, key) => {
+      if (key.return && selected) {
+        setLoading(true)
+        onCreate(await createTracker(token))
+        setLoading(false)
+      }
+    },
+    {
+      active: !!selected
     }
-  })
+  )
 
   return (
     <Box>
