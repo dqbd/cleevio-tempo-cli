@@ -2,17 +2,22 @@
 import React, { useState, useCallback, useEffect } from "react"
 import Conf from "conf"
 
+
 import { AppContext } from "ink"
 import { TokenContext } from "../context"
 import { List } from "./List"
 import { Login } from "./Login"
+
+import pkg from '../../package.json'
 
 const config = new Conf({
   schema: {
     tempoToken: {
       type: "string"
     }
-  }
+  },
+  projectName: pkg.name,
+  projectVersion: pkg.version
 })
 
 class ErrorBoundary extends React.Component {

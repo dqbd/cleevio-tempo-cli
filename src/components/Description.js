@@ -14,7 +14,7 @@ export const Description = ({
   const hasValue = (value || "").length > 0
 
   useActiveInput(
-    (input, key) => {
+    (input, key, raw) => {
       if (key.upArrow || key.downArrow || (key.ctrl && input === "c")) return
 
       if (key.return) {
@@ -27,7 +27,7 @@ export const Description = ({
         newOffset -= 1
       } else if (key.rightArrow) {
         newOffset += 1
-      } else if ((key.ctrl && input === "h") || (key.meta && input === "[3~")) {
+      } else if (raw === '\x08' || (raw === '\x7F')) {
         newValue =
           value.slice(0, cursorOffset - 1) +
           value.slice(cursorOffset, value?.length)
