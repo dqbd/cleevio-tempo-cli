@@ -1,7 +1,7 @@
 "use strict"
 import React from "react"
-import { render } from "ink"
 import meow from "meow"
+import { render } from "ink"
 import { App } from './components/App'
 
 const cli = meow(`
@@ -9,12 +9,23 @@ const cli = meow(`
     $ cleevio-tempo-cli
 
   Options
-    --token  Your Tempo API Token
     --debug  Toggle debug mode
+    --logout Remove the Tempo Token
 
   Examples
-    $ cleevio-tempo-cli --token=[Token]
-`)
+    $ cleevio-tempo-cli
+`, {
+  flags: {
+    logout: {
+      type: "boolean",
+      default: false,
+    },
+    debug: {
+      type: "boolean",
+      default: false,
+    }
+  }
+})
 
 const { waitUntilExit } = render(
   React.createElement(App, cli.flags), {

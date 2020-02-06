@@ -3,19 +3,24 @@ import { Text } from "ink"
 import chalk from "chalk"
 import { useActiveInput } from "../hooks"
 
-export const Description = ({ value, onChange, placeholder, focus }) => {
+export const Description = ({
+  value,
+  onChange,
+  onSubmit,
+  placeholder,
+  focus
+}) => {
   const [cursorOffset, setCursorOffset] = useState(value?.length || 0)
   const hasValue = (value || "").length > 0
 
   useActiveInput(
     (input, key) => {
-      if (
-        key.upArrow ||
-        key.downArrow ||
-        (key.ctrl && input === "c") ||
-        key.return
-      )
+      if (key.upArrow || key.downArrow || (key.ctrl && input === "c")) return
+
+      if (key.return) {
+        if (onSubmit) onSubmit()
         return
+      }
       let newValue = value,
         newOffset = cursorOffset
       if (key.leftArrow) {
@@ -26,6 +31,7 @@ export const Description = ({ value, onChange, placeholder, focus }) => {
         newValue =
           value.slice(0, cursorOffset - 1) +
           value.slice(cursorOffset, value?.length)
+        newOffset -= 1
       } else {
         newValue =
           value.slice(0, cursorOffset) +

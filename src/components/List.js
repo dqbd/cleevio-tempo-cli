@@ -4,7 +4,7 @@ import { Tracker } from "./Tracker"
 import { NewTimer } from "./NewTimer"
 import { useInterval, useIsMounted, useActiveInput } from "../hooks"
 
-import { Text, Box, useApp } from "ink"
+import { Text, Box } from "ink"
 import { getTrackers } from "../api"
 import { stateOrder, SELECT_ROW } from "../constants"
 import { parseDate } from "../utils"
@@ -20,8 +20,6 @@ export const List = () => {
   const [trackers, setTrackers] = React.useState(false)
   const [selected, setSelected] = React.useState(0)
   const [row, setRow] = React.useState(SELECT_ROW)
-
-  const { exit } = useApp()
 
   const setSortedTrackers = React.useCallback(
     trackers => {
@@ -60,7 +58,6 @@ export const List = () => {
 
   useActiveInput(
     (_, key) => {
-      if (key.escape) return exit()
       const trackersLen = (trackers || []).length
       if (key.upArrow) {
         setSelected(Math.max(0, selected - 1))

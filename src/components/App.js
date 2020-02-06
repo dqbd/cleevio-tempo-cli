@@ -1,11 +1,19 @@
 "use strict"
-import React from "react"
-import { Provider } from "react-redux/lib/alternate-renderers"
+import React, { useState, useCallback, useEffect } from "react"
+import Conf from "conf"
 
-import { Text, AppContext } from "ink"
+import { AppContext } from "ink"
 import { TokenContext } from "../context"
 import { List } from "./List"
-import { store } from "../state"
+import { Login } from "./Login"
+
+const config = new Conf({
+  schema: {
+    tempoToken: {
+      type: "string"
+    }
+  }
+})
 
 class ErrorBoundary extends React.Component {
   componentDidCatch(error) {
@@ -18,22 +26,40 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-export const App = ({ token }) => {
+const InternalApp = ({ logout }) => {
+  const [token, setToken] = useState(!logout ? config.get("tempoToken") : "")
+  const handleToken = useCallback(
+    newToken => {
+      config.set("tempoToken", newToken)
+      setToken(newToken)
+    },
+    [setToken]
+  )
+
+  useEffect(() => {
+    if (logout) {
+      config.clear()
+      setToken("")
+    }
+  }, [logout])
+
   if (!token) {
-    return <Text>Error: --token is required</Text>
+    return <Login onToken={handleToken} />
   }
 
   return (
-    <AppContext.Consumer>
-      {({ exit }) => (
-        <ErrorBoundary exit={exit}>
-          <Provider store={store}>
-            <TokenContext.Provider value={token}>
-              <List />
-            </TokenContext.Provider>
-          </Provider>
-        </ErrorBoundary>
-      )}
-    </AppContext.Consumer>
+    <TokenContext.Provider value={token}>
+      <List />
+    </TokenContext.Provider>
   )
 }
+
+export const App = props => (
+  <AppContext.Consumer>
+    {({ exit }) => (
+      <ErrorBoundary exit={exit}>
+        <InternalApp {...props} />
+      </ErrorBoundary>
+    )}
+  </AppContext.Consumer>
+)
