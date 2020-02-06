@@ -6,6 +6,7 @@ import { getTrackers } from "../api"
 
 export const Login = ({ onToken }) => {
   const [loading, setLoading] = useState(false)
+  const [errors, showErrors] = useState(false)
   const [value, setValue] = useState("")
 
   const handleChange = useCallback(
@@ -23,6 +24,7 @@ export const Login = ({ onToken }) => {
         onToken(value)
       } catch (err) {
         handleChange("")
+        showErrors(true)
         setLoading(false)
       }
     }
@@ -42,7 +44,8 @@ export const Login = ({ onToken }) => {
       )}
       {!loading && (
         <Box>
-          Token key:
+          {!errors && "Token key:"}
+          {errors && "Login failed, try again:"}
           <Description
             value={value}
             onChange={handleChange}

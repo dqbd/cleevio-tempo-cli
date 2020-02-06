@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect } from "react"
 import Conf from "conf"
 
-
 import { AppContext } from "ink"
 import { TokenContext } from "../context"
 import { List } from "./List"

@@ -1,5 +1,5 @@
 "use strict"
-import React, { useContext } from "react"
+import React, { useContext, useState } from "react"
 import { Tracker } from "./Tracker"
 import { NewTimer } from "./NewTimer"
 import { useInterval, useIsMounted, useActiveInput } from "../hooks"
@@ -14,12 +14,13 @@ import Spinner from "ink-spinner"
 export const List = () => {
   const token = useContext(TokenContext)
   const isMounted = useIsMounted()
-  const [now, setNow] = React.useState(Date.now())
-  const [arrowFreeze, setArrowFreeze] = React.useState(false)
+  const [now, setNow] = useState(Date.now())
+  const [arrowFreeze, setArrowFreeze] = useState(false)
 
-  const [trackers, setTrackers] = React.useState(false)
-  const [selected, setSelected] = React.useState(0)
-  const [row, setRow] = React.useState(SELECT_ROW)
+  const [errors, showError] = useState(false)
+  const [trackers, setTrackers] = useState(false)
+  const [selected, setSelected] = useState(0)
+  const [row, setRow] = useState(SELECT_ROW)
 
   const setSortedTrackers = React.useCallback(
     trackers => {
@@ -79,17 +80,23 @@ export const List = () => {
   )
 
   useInterval(async () => {
-    const newTrackers = await getTrackers(token)
-    setSortedTrackers(newTrackers)
+    try {
+      setSortedTrackers(await getTrackers(token))
+    } catch {
+      if (isMounted.current) showError(true)
+    }
   }, 500)
 
   useInterval(() => setNow(Date.now()), 100)
 
   return (
     <Box flexGrow={1}>
-      {trackers === false && (
+      {(trackers === false || errors) && (
         <Text>
-          <Spinner type="dots" /> Loading your trackers
+          <Spinner type="dots" /> 
+          {" "}
+          {!errors && "Loading your trackers"}
+          {errors && "Failing to load trackers, retrying"}
         </Text>
       )}
       {trackers !== false && (
