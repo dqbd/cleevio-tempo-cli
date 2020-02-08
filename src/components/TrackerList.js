@@ -1,14 +1,22 @@
 "use strict"
-import React, { useContext, useState } from "react"
+import React, { useContext, useState, useEffect } from "react"
+import { Text, Box } from "ink"
+
+import pkg from "../../package.json"
+import {
+  useInterval,
+  useIsMounted,
+  useActiveInput,
+  useAsyncEffect
+} from "../hooks"
+import { stateOrder, SELECT_ROW } from "../constants"
+import { TokenContext } from "../context"
+import { parseDate } from "../utils"
+import { getTrackers } from "../api"
+
 import { Tracker } from "./Tracker"
 import { NewTimer } from "./NewTimer"
-import { useInterval, useIsMounted, useActiveInput, useAsyncEffect } from "../hooks"
 
-import { Text, Box } from "ink"
-import { getTrackers } from "../api"
-import { stateOrder, SELECT_ROW } from "../constants"
-import { parseDate } from "../utils"
-import { TokenContext } from "../context"
 import Spinner from "ink-spinner"
 
 export const List = () => {
@@ -69,16 +77,13 @@ export const List = () => {
     [setSortedTrackers, trackers]
   )
 
-  const fetchTrackers = React.useCallback(
-    async () => {
-      try {
-        setSortedTrackers(await getTrackers(token))
-      } catch {
-        if (isMounted.current) showError(true)
-      }
-    },
-    [showError, setSortedTrackers, getTrackers, token, isMounted]
-  )
+  const fetchTrackers = React.useCallback(async () => {
+    try {
+      setSortedTrackers(await getTrackers(token))
+    } catch {
+      if (isMounted.current) showError(true)
+    }
+  }, [showError, setSortedTrackers, getTrackers, token, isMounted])
 
   useActiveInput(
     (_, key) => {
@@ -101,6 +106,23 @@ export const List = () => {
       active: !arrowFreeze
     }
   )
+
+  useEffect(() => {
+    const active = (trackers || []).filter(({ isPlaying }) => isPlaying)
+    const allHasTags = active.every(({ issueKey }) => !!issueKey)
+
+    if (active.length > 0) {
+      if (allHasTags && active.length <= 3) {
+        process.title = `${active
+          .map(({ issueKey }) => issueKey)
+          .join(", ")} | ${pkg.name}`
+      } else {
+        process.title = `${active.length} running | ${pkg.name}`
+      }
+    } else {
+      process.title = pkg.name
+    }
+  }, [trackers])
 
   useAsyncEffect(fetchTrackers, [])
   useInterval(fetchTrackers, 60 * 1000)
