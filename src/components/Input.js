@@ -9,6 +9,7 @@ export const Input = ({
   onSubmit,
   placeholder,
   focus,
+  minWidth = 0,
   spacing = true
 }) => {
   const [cursorOffset, setCursorOffset] = useState(value?.length || 0)
@@ -53,25 +54,33 @@ export const Input = ({
     }
   )
 
-  let renderedValue = value
+  let renderedValue = !hasValue ? placeholder : value
 
   if (focus) {
-    renderedValue = value?.length ? "" : chalk.inverse(" ")
+    if (hasValue) {
+      renderedValue = value?.length ? "" : chalk.inverse(" ")
 
-    for (let i = 0; i < value.length; ++i) {
-      const char = value[i]
-      renderedValue += i === cursorOffset ? chalk.inverse(char) : char
-    }
+      for (let i = 0; i < value.length; ++i) {
+        const char = value[i]
+        renderedValue += i === cursorOffset ? chalk.inverse(char) : char
+      }
 
-    if (value?.length && cursorOffset === value.length) {
-      renderedValue += chalk.inverse(" ")
+      if (value?.length && cursorOffset === value.length) {
+        renderedValue += chalk.inverse(" ")
+      }
+
+      for (let i = 0; i < minWidth - value.length - 1; ++i) {
+        renderedValue += " "
+      }
+    } else if (placeholder) {
+      renderedValue = chalk.inverse(placeholder)
     }
   }
 
   return (
     <Text>
       {spacing && " "}
-      {hasValue ? renderedValue : placeholder}
+      {renderedValue}
       {spacing && " "}
     </Text>
   )

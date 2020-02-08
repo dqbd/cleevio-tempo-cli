@@ -1,5 +1,5 @@
 import React, { useContext, useCallback, useState } from "react"
-import { Text, Box } from "ink"
+import { Text, Box, Color } from "ink"
 import { createTracker } from "../api"
 import { TokenContext } from "../context"
 import { useActiveInput } from "../hooks"
@@ -62,10 +62,12 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
         setLoading(true)
         setFocusList(false)
         setActiveList(false)
-        onCreate(await createTracker(token, {
-          issueId: item.value,
-          issueKey: item.key
-        }))
+        onCreate(
+          await createTracker(token, {
+            issueId: item.value,
+            issueKey: item.key
+          })
+        )
         setLoading(false)
       }
       handleChange("")
@@ -76,7 +78,7 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
   if (loading) return <Text>Creating a new timer...</Text>
   return (
     <Box flexDirection="column">
-      <Box>
+      <Color gray={!selected} blue={!search?.trim() && !focusList && selected}>
         {`[${selected ? "+" : " "}]`}
         <Input
           value={search}
@@ -85,7 +87,7 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
           focus={selected}
         />
         {selected && !search && "(or type an issue)"}
-      </Box>
+      </Color>
       <SearchList
         search={search}
         token={token}

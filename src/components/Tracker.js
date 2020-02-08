@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useContext } from "react"
 import { Text, Color, Box } from "ink"
 import Spinner from "ink-spinner"
+import parseDuration from "parse-duration"
 import open from "open"
 
 import {
@@ -8,12 +9,18 @@ import {
   CHANGE_ISSUE,
   DESCRIPTION,
   LOG,
-  DELETE
+  DELETE,
+  SELECT_TIME
 } from "../constants"
 
 import { useIsMounted, useActiveInput, useAsyncEffect } from "../hooks"
 import { deleteTracker, updateTracker, toggleTracker } from "../api"
-import { getTimeSpent, centerText } from "../utils"
+import {
+  getTimeSpent,
+  centerText,
+  getDescriptionTime,
+  updateDescriptionTime
+} from "../utils"
 import { TokenContext } from "../context"
 
 import { SearchList } from "./SearchList"
@@ -28,6 +35,7 @@ export function Tracker({
   now,
   row
 }) {
+  const toggleTime = selected && row === SELECT_TIME
   const toggleState = selected && row === SELECT_ROW
   const toggleIssue = selected && row === CHANGE_ISSUE
   const toggleDesc = selected && row === DESCRIPTION
@@ -39,6 +47,7 @@ export function Tracker({
   const [loadEvent, setLoadEvent] = useState(null)
   const [search, setSearch] = useState("")
   const [desc, setDesc] = useState("")
+  const [time, setTime] = useState("")
 
   useActiveInput(
     async (input, key) => {
@@ -46,7 +55,7 @@ export function Tracker({
         if (toggleState) {
           setLoadEvent({
             row: SELECT_ROW,
-            value: tracker.isPlaying ? "STOPPING" : "STARTING"
+            value: tracker.isPlaying ? "Stopping" : "Starting"
           })
           onUpdate(await toggleTracker(tracker.id, token))
           isMounted.current && setLoadEvent(null)
@@ -85,19 +94,49 @@ export function Tracker({
     async item => {
       if (item) {
         const { key, value: id } = item
-        onUpdate(await updateTracker(
-          tracker.id,
-          {
-            issueId: id,
-            issueKey: key
-          },
-          token
-        ))
+        onUpdate(
+          await updateTracker(
+            tracker.id,
+            {
+              issueId: id,
+              issueKey: key
+            },
+            token
+          )
+        )
       }
       handleSearchChange("")
     },
     [tracker.id, onUpdate, token]
   )
+
+  const handleTimeChange = useCallback(
+    value => {
+      onArrowFreeze(value && value.trim())
+      setTime(value)
+    },
+    [onArrowFreeze, setTime]
+  )
+
+  const handleTimeSubmit = useCallback(async () => {
+    setLoadEvent({ row: SELECT_TIME })
+
+    const { id, description } = tracker
+    const offset = getDescriptionTime(description || "") + parseDuration(time)
+    onUpdate(
+      await updateTracker(
+        id,
+        {
+          description: updateDescriptionTime(description, offset)
+        },
+        token
+      )
+    )
+    if (isMounted.current) {
+      handleTimeChange("")
+      setLoadEvent(null)
+    }
+  }, [time, token, onUpdate, tracker])
 
   useEffect(() => {
     if (!toggleIssue) handleSearchChange("")
@@ -118,26 +157,39 @@ export function Tracker({
     }
   }, [toggleDesc, isMounted, desc, tracker.id, token, onUpdate])
 
-  let state = tracker.isPlaying ? "WORK" : "IDLE"
+  let state = tracker.isPlaying ? "Stop" : "Play"
   if (loadEvent && loadEvent.row === SELECT_ROW) state = loadEvent.value
-  state = toggleState ? `[${centerText(state, 8)}]` : centerText(state, 10)
+  state = centerText(state, 10)
 
   return (
     <Box flexDirection="column">
       <Box key={tracker.id}>
-        <Box marginRight={1}>
-          <Color dim>
-            <Text>{getTimeSpent(tracker.time.trackerDuration, now)}</Text>
+        <Box>
+          <Color bgGreen={tracker.isPlaying} bgRed={!tracker.isPlaying}>
+            <Input
+              value={time}
+              minWidth={9}
+              onChange={handleTimeChange}
+              placeholder={getTimeSpent(
+                tracker.time.trackerDuration,
+                tracker.description,
+                now
+              )}
+              focus={toggleTime}
+              onSubmit={handleTimeSubmit}
+            />
           </Color>
         </Box>
         <Color
-          bgYellow={loadEvent?.row === SELECT_ROW}
-          bgGreen={!(loadEvent?.row === SELECT_ROW) && tracker.isPlaying}
-          bgBlue={!(loadEvent?.row === SELECT_ROW) && !tracker.isPlaying}
+          white={toggleState}
+          yellow={!toggleState && tracker.isPlaying}
+          bgYellow={toggleState && tracker.isPlaying}
+          green={!toggleState && !tracker.isPlaying}
+          bgGreen={toggleState && !tracker.isPlaying}
         >
           <Text bold={toggleState}>{state}</Text>
         </Color>
-        <Color green={!toggleLog} bgGreen={toggleLog} white={toggleLog}>
+        <Color blue={!toggleLog} bgBlue={toggleLog} white={toggleLog}>
           {` Log Time `.padEnd(10, " ")}
         </Color>
         <Color red={!toggleDelete} bgRed={toggleDelete} white={toggleLog}>
@@ -149,12 +201,11 @@ export function Tracker({
             value={search}
             onChange={handleSearchChange}
             placeholder={
-              (tracker?.issueKey &&
-                `${tracker.issueKey}${toggleIssue ? " (open browser)" : ""}`) ||
-              (toggleIssue ? "type an issue..." : "...")
+              tracker?.issueKey ?? (toggleIssue ? "type an issue..." : "...")
             }
             focus={toggleIssue}
           />
+          {toggleIssue ? "(open browser) " : ""}
         </Color>
       </Box>
       <SearchList
