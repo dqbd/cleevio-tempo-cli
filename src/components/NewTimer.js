@@ -3,12 +3,16 @@ import { Text, Box } from "ink"
 import { createTracker } from "../api"
 import { TokenContext } from "../context"
 import { useActiveInput } from "../hooks"
-import { Description } from "./Description"
 import { SearchList } from "./SearchList"
+import { Input } from "./Input"
 
 export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
   const token = useContext(TokenContext)
   const [loading, setLoading] = useState(false)
+
+  const [focusList, setFocusList] = useState(false)
+  const [activeList, setActiveList] = useState(false)
+
   const [search, setSearch] = useState("")
 
   const hasSearch = !!search?.trim()
@@ -16,15 +20,33 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
   useActiveInput(
     async (_, key) => {
       if (key.return) {
-        setLoading(true)
-        onCreate(await createTracker(token))
-        setLoading(false)
+        if (!focusList) {
+          setLoading(true)
+          onCreate(await createTracker(token))
+          setLoading(false)
+        }
+      } else if (key.downArrow) {
+        setFocusList(true)
+        onArrowFreeze(true)
+      } else if (key.upArrow) {
+        if (!activeList) {
+          setFocusList(false)
+          onArrowFreeze(false)
+        }
       }
     },
     {
       active: !!selected && !hasSearch
     }
   )
+
+  const handleHighlight = useCallback((item, index) => {
+    if (index !== 0) {
+      setActiveList(true)
+    } else {
+      setActiveList(false)
+    }
+  })
 
   const handleChange = useCallback(
     value => {
@@ -38,15 +60,17 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
     async item => {
       if (item) {
         setLoading(true)
-        await createTracker(token, {
+        setFocusList(false)
+        setActiveList(false)
+        onCreate(await createTracker(token, {
           issueId: item.value,
           issueKey: item.key
-        })
+        }))
         setLoading(false)
       }
       handleChange("")
     },
-    [token]
+    [token, onCreate]
   )
 
   if (loading) return <Text>Creating a new timer...</Text>
@@ -54,7 +78,7 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
     <Box flexDirection="column">
       <Box>
         {`[${selected ? "+" : " "}]`}
-        <Description
+        <Input
           value={search}
           onChange={handleChange}
           placeholder={`Create a new timer`}
@@ -65,8 +89,10 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
       <SearchList
         search={search}
         token={token}
-        focus={!!(search && search.trim())}
+        focus={!!search?.trim() || focusList}
+        preload={selected}
         onSelect={handleItemSelect}
+        onHighlight={handleHighlight}
       />
     </Box>
   )

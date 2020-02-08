@@ -1,3 +1,6 @@
+import React from 'react'
+import { Box } from 'ink'
+
 export const parseDate = str =>
   typeof str === "string" ? Date.parse(`${str}Z`) : null
 
@@ -21,9 +24,24 @@ export const getTimeSpent = (trackerDuration, now) => {
   return formatTime(Math.floor(len / 1000))
 }
 
-export const centerText = (text, width) => {
-  let rightPad = Math.floor((width - text.length) / 2)
-  let leftPad = width - Math.min(width, text.length + rightPad)
+const centerItems = (item, itemWidth, width) => {
+  let rightPad = Math.floor((width - itemWidth) / 2)
+  let leftPad = width - Math.min(width, itemWidth + rightPad)
+  
+  return [" ".repeat(leftPad), item, " ".repeat(rightPad)]
+}
 
-  return [" ".repeat(leftPad), text, " ".repeat(rightPad)].join("")
+export const centerNode = (node, nodeWidth, width) => {
+  const [left, item, right] = centerItems(node, nodeWidth, width)
+  return (
+    <Box>
+      {left}
+      {item}
+      {right}
+    </Box>
+  )
+}
+
+export const centerText = (text, width) => {
+  return centerItems(text, text.length, width).join("")
 }

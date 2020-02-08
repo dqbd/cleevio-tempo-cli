@@ -4,7 +4,7 @@ import Conf from "conf"
 
 import { AppContext } from "ink"
 import { TokenContext } from "../context"
-import { List } from "./List"
+import { List } from "./TrackerList"
 import { Login } from "./Login"
 
 import pkg from '../../package.json'

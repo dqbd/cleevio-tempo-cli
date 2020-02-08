@@ -1,126 +1,80 @@
-"use strict"
-import React, { useContext, useState } from "react"
-import { Tracker } from "./Tracker"
-import { NewTimer } from "./NewTimer"
-import { useInterval, useIsMounted, useActiveInput } from "../hooks"
+import React, { useState, useEffect } from "react"
+import { Box, Color } from "ink"
+import { useActiveInput } from "../hooks"
 
-import { Text, Box } from "ink"
-import { getTrackers } from "../api"
-import { stateOrder, SELECT_ROW } from "../constants"
-import { parseDate } from "../utils"
-import { TokenContext } from "../context"
-import Spinner from "ink-spinner"
+export const List = ({
+  items,
+  focus,
+  onHighlight,
+  onSelect,
+  hideOnFocus = true,
+  limit = 5
+}) => {
+  const [selectedIndex, setIndex] = useState(0)
+  const [pageIndex, setPageIndex] = useState(0)
 
-export const List = () => {
-  const token = useContext(TokenContext)
-  const isMounted = useIsMounted()
-  const [now, setNow] = useState(Date.now())
-  const [arrowFreeze, setArrowFreeze] = useState(false)
-
-  const [errors, showError] = useState(false)
-  const [trackers, setTrackers] = useState(false)
-  const [selected, setSelected] = useState(0)
-  const [row, setRow] = useState(SELECT_ROW)
-
-  const setSortedTrackers = React.useCallback(
-    trackers => {
-      if (isMounted.current) {
-        setTrackers(
-          (trackers || []).sort(
-            ({ createdDate: a }, { createdDate: b }) =>
-              parseDate(a) - parseDate(b)
-          )
-        )
+  useEffect(() => {
+    setIndex(0)
+    setPageIndex(0)
+    if (focus) {
+      if (onHighlight) {
+        onHighlight(items[0], 0)
       }
-    },
-    [isMounted, setTrackers]
-  )
+    }
+  }, [items, focus])
 
-  const handleUpdate = React.useCallback(
-    tracker => {
-      setSortedTrackers(
-        trackers.map(tempTracker => {
-          if (tempTracker.id === tracker.id) {
-            return tracker
-          }
-          return tempTracker
-        })
-      )
-    },
-    [setSortedTrackers, trackers]
-  )
+  useActiveInput((_, ctrl) => {
+    if (!focus) return
 
-  const handleCreate = React.useCallback(
-    tracker => {
-      setSortedTrackers([...trackers, tracker])
-    },
-    [setSortedTrackers, trackers]
-  )
-
-  useActiveInput(
-    (_, key) => {
-      const trackersLen = (trackers || []).length
-      if (key.upArrow) {
-        setSelected(Math.max(0, selected - 1))
-      } else if (key.downArrow) {
-        setSelected(Math.min(trackersLen, selected + 1))
-      } else if (key.leftArrow && selected !== trackersLen) {
-        setRow(stateOrder[Math.max(0, stateOrder.indexOf(row) - 1)])
-      } else if (key.rightArrow && selected !== trackersLen) {
-        setRow(
-          stateOrder[
-            Math.min(stateOrder.length - 1, stateOrder.indexOf(row) + 1)
-          ]
-        )
+    let nextIndex = selectedIndex
+    let nextPageIndex = pageIndex
+    if (ctrl.upArrow) {
+      nextIndex -= 1
+    } else if (ctrl.downArrow) {
+      nextIndex += 1
+    } else if (ctrl.return) {
+      if (onSelect) {
+        onSelect(items[nextIndex])
       }
-    },
-    {
-      active: !arrowFreeze
+      return
     }
-  )
 
-  useInterval(async () => {
-    try {
-      setSortedTrackers(await getTrackers(token))
-    } catch {
-      if (isMounted.current) showError(true)
+    nextIndex = Math.max(0, Math.min((items || []).length - 1, nextIndex))
+
+    if (onHighlight) {
+      onHighlight(items[nextIndex], nextIndex)
     }
-  }, 500)
 
-  useInterval(() => setNow(Date.now()), 100)
+    if (nextIndex >= pageIndex + limit) {
+      nextPageIndex += 1
+    } else if (nextIndex < pageIndex) {
+      nextPageIndex -= 1
+    }
+
+    nextPageIndex = Math.max(
+      0,
+      Math.min((items || []).length - 1, nextPageIndex)
+    )
+    setIndex(nextIndex)
+    setPageIndex(nextPageIndex)
+  }, {
+    active: focus
+  })
 
   return (
-    <Box flexGrow={1}>
-      {(trackers === false || errors) && (
-        <Text>
-          <Spinner type="dots" /> 
-          {" "}
-          {!errors && "Loading your trackers"}
-          {errors && "Failing to load trackers, retrying"}
-        </Text>
-      )}
-      {trackers !== false && (
-        <Box flexDirection="column" flexGrow={1}>
-          {trackers.map((tracker, index) => {
-            return (
-              <Tracker
-                key={tracker.id}
-                selected={index === selected}
-                tracker={tracker}
-                onUpdate={handleUpdate}
-                onArrowFreeze={setArrowFreeze}
-                now={now}
-                row={row}
-              />
-            )
-          })}
-          <NewTimer
-            selected={selected === (trackers || []).length}
-            onCreate={handleCreate}
-            onArrowFreeze={setArrowFreeze}
-          />
-        </Box>
-      )}
+    <Box flexDirection="column">
+      {items
+        .slice(pageIndex, pageIndex + limit)
+        .map(({ key, label }, relIndex) => {
+          const index = relIndex + pageIndex
+          const showActive = (!hideOnFocus || focus) && selectedIndex === index
+          return (
+            <Color key={key} blue={showActive} gray={hideOnFocus && !focus}>
+              {showActive ? "> " : "  "}
+              {label}
+            </Color>
+          )
+        })}
     </Box>
   )
 }

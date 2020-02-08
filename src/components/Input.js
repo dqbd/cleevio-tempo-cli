@@ -3,12 +3,13 @@ import { Text } from "ink"
 import chalk from "chalk"
 import { useActiveInput } from "../hooks"
 
-export const Description = ({
+export const Input = ({
   value,
   onChange,
   onSubmit,
   placeholder,
-  focus
+  focus,
+  spacing = true
 }) => {
   const [cursorOffset, setCursorOffset] = useState(value?.length || 0)
   const hasValue = (value || "").length > 0
@@ -27,7 +28,7 @@ export const Description = ({
         newOffset -= 1
       } else if (key.rightArrow) {
         newOffset += 1
-      } else if (raw === '\x08' || (raw === '\x7F')) {
+      } else if (raw === "\x08" || raw === "\x7F") {
         newValue =
           value.slice(0, cursorOffset - 1) +
           value.slice(cursorOffset, value?.length)
@@ -67,5 +68,11 @@ export const Description = ({
     }
   }
 
-  return <Text> {hasValue ? renderedValue : placeholder} </Text>
+  return (
+    <Text>
+      {spacing && " "}
+      {hasValue ? renderedValue : placeholder}
+      {spacing && " "}
+    </Text>
+  )
 }

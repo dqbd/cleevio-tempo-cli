@@ -51,7 +51,7 @@ export async function updateTracker(id, payload, token) {
       authorization: `Bearer ${token}`
     },
     body: JSON.stringify(payload || {})
-  })
+  }).then(a => a.json())
 }
 
 const getJiraToken = (() => {
@@ -60,7 +60,7 @@ const getJiraToken = (() => {
   return async token => {
     const now = Date.now()
     // TODO: move to redux state
-    if (!cache || now - obtained > 1000 * 60) {
+    if (!cache || now - obtained > 1000 * 60 * 10) {
       cache = await fetch(
         `https://api.tempo.io/jira/v1/get-jira-oauth-token/`,
         {
@@ -77,6 +77,16 @@ const getJiraToken = (() => {
     return cache
   }
 })();
+
+export async function getServerTime(jira) {
+  const { serverTime } = await fetch(`${jira.client.baseUrl}/rest/api/3/serverInfo`, {
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${jira.token}`
+    }
+  }).then(a => a.json())
+  return serverTime
+}
 
 export async function getListIssues(search, token) {
   const jira = await getJiraToken(token)
@@ -102,10 +112,10 @@ export async function getListIssues(search, token) {
 
   const issues = payload.sections.reduce((memo, section) => {
     for (const issue of section.issues) {
-      memo[issue.id] = issue
+      memo.set(issue.id, issue)
     }
     return memo
-  }, {})
+  }, new Map())
 
-  return Object.values(issues)
+  return [...issues.values()]
 }

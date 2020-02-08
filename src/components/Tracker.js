@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useContext } from "react"
-import open from "open"
 import { Text, Color, Box } from "ink"
+import Spinner from "ink-spinner"
+import open from "open"
 
 import {
   SELECT_ROW,
@@ -11,17 +12,18 @@ import {
 } from "../constants"
 
 import { useIsMounted, useActiveInput, useAsyncEffect } from "../hooks"
+import { deleteTracker, updateTracker, toggleTracker } from "../api"
+import { getTimeSpent, centerText } from "../utils"
+import { TokenContext } from "../context"
 
 import { SearchList } from "./SearchList"
-import { getTimeSpent, centerText } from "../utils"
-import { deleteTracker, updateTracker, toggleTracker } from "../api"
-import { TokenContext } from "../context"
-import { Description } from "./Description"
+import { Input } from "./Input"
 
 export function Tracker({
   tracker,
   selected,
   onUpdate,
+  onDelete,
   onArrowFreeze,
   now,
   row
@@ -46,8 +48,7 @@ export function Tracker({
             row: SELECT_ROW,
             value: tracker.isPlaying ? "STOPPING" : "STARTING"
           })
-          const newTracker = await toggleTracker(tracker.id, token)
-          onUpdate(newTracker)
+          onUpdate(await toggleTracker(tracker.id, token))
           isMounted.current && setLoadEvent(null)
         } else if (toggleIssue) {
           if (!search && tracker.issueKey) {
@@ -63,6 +64,7 @@ export function Tracker({
             value: "Deleting"
           })
           await deleteTracker(tracker.id, token)
+          onDelete(tracker)
         }
       }
     },
@@ -83,18 +85,18 @@ export function Tracker({
     async item => {
       if (item) {
         const { key, value: id } = item
-        await updateTracker(
+        onUpdate(await updateTracker(
           tracker.id,
           {
             issueId: id,
             issueKey: key
           },
           token
-        )
+        ))
       }
       handleSearchChange("")
     },
-    [tracker.id, token]
+    [tracker.id, onUpdate, token]
   )
 
   useEffect(() => {
@@ -139,10 +141,11 @@ export function Tracker({
           {` Log Time `.padEnd(10, " ")}
         </Color>
         <Color red={!toggleDelete} bgRed={toggleDelete} white={toggleLog}>
-          {centerText(loadEvent?.row === DELETE ? "Deleting" : "Delete", 10)}
+          {loadEvent?.row === DELETE && centerText("Deleting", 10)}
+          {loadEvent?.row !== DELETE && centerText("Delete", 10)}
         </Color>
         <Color bgBlue={toggleIssue}>
-          <Description
+          <Input
             value={search}
             onChange={handleSearchChange}
             placeholder={

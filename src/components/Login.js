@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from "react"
 import { Text, Box, Color } from "ink"
-import { Description } from "./Description"
 import Spinner from "ink-spinner"
+
+import { Input } from "./Input"
 import { getTrackers } from "../api"
 
 export const Login = ({ onToken }) => {
@@ -46,7 +47,7 @@ export const Login = ({ onToken }) => {
         <Box>
           {!errors && "Token key:"}
           {errors && "Login failed, try again:"}
-          <Description
+          <Input
             value={value}
             onChange={handleChange}
             onSubmit={handleSubmit}
