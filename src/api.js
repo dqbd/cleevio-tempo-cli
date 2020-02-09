@@ -1,4 +1,47 @@
 import fetch from "node-fetch"
+import { getStartDate } from "./utils"
+
+const getJiraToken = (() => {
+  let cache = null,
+    obtained = 0
+
+  return async token => {
+    const now = Date.now()
+    // TODO: move to redux state
+    if (!cache || now - obtained > 1000 * 60 * 10) {
+      cache = fetch(`https://api.tempo.io/jira/v1/get-jira-oauth-token/`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`
+        }
+      }).then(a => a.json())
+      obtained = Date.now()
+    }
+
+    return await cache
+  }
+})()
+
+const getJiraAccountId = (() => {
+  let result = null
+  return async token => {
+    if (!result) {
+      const jira = await getJiraToken(token)
+      const { accountId } = await fetch(
+        `${jira.client.baseUrl}/rest/api/3/myself`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `Bearer ${jira.token}`
+          }
+        }
+      ).then(a => a.json())
+      result = accountId
+    }
+    return result
+  }
+})()
 
 export async function toggleTracker(id, token) {
   return fetch(`https://api.tempo.io/trackers/v1/${id}/toggle`, {
@@ -29,7 +72,7 @@ export async function createTracker(token, payload = {}) {
     },
     body: JSON.stringify({
       isPlaying: true,
-      ...payload,
+      ...payload
     })
   }).then(a => a.json())
 }
@@ -54,38 +97,22 @@ export async function updateTracker(id, payload, token) {
   }).then(a => a.json())
 }
 
-const getJiraToken = (() => {
-  let cache = null,
-    obtained = 0
-  return async token => {
-    const now = Date.now()
-    // TODO: move to redux state
-    if (!cache || now - obtained > 1000 * 60 * 10) {
-      cache = await fetch(
-        `https://api.tempo.io/jira/v1/get-jira-oauth-token/`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            authorization: `Bearer ${token}`
-          }
-        }
-      ).then(a => a.json())
-      obtained = Date.now()
-    }
-
-    return cache
-  }
-})();
-
-export async function getServerTime(jira) {
-  const { serverTime } = await fetch(`${jira.client.baseUrl}/rest/api/3/serverInfo`, {
+export async function createWorklog(payload, token) {
+  const authorAccountId = await getJiraAccountId(token)
+  const res = await fetch(`https://api.tempo.io/core/3/worklogs`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
-      authorization: `Bearer ${jira.token}`
-    }
+      authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      authorAccountId,
+      startDate: getStartDate(),
+      ...payload
+    })
   }).then(a => a.json())
-  return serverTime
+
+  return res
 }
 
 export async function getListIssues(search, token) {

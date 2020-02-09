@@ -7,7 +7,9 @@ import { TokenContext } from "../context"
 import { List } from "./TrackerList"
 import { Login } from "./Login"
 
-import pkg from '../../package.json'
+import pkg from "../../package.json"
+import { createWorklog } from "../api"
+import { getStartDate } from "../utils"
 
 const config = new Conf({
   schema: {

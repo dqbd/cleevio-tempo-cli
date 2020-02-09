@@ -6,6 +6,15 @@ const DESC_REGEX = /\s*cleevio-tempo-cli:<(?<human>.*?)><(?<timestamp>[+-]?[0-9]
 export const parseDate = str =>
   typeof str === "string" ? Date.parse(`${str}Z`) : null
 
+export const getStartDate = (timestamp = Date.now()) => {
+  const date = new Date(timestamp)
+  return [
+    date.getFullYear(),
+    `${date.getMonth() + 1}`.padStart(2, "0"),
+    `${date.getDate()}`.padStart(2, "0")
+  ].join("-")
+}
+
 export const formatTime = seconds => {
   const absSeconds = Math.abs(seconds)
   const h = Math.floor(absSeconds / 3600)
@@ -26,7 +35,7 @@ export const getTimeSpent = (trackerDuration, description, now) => {
     len += endVal - startVal
   }
 
-  return formatTime(Math.floor(len / 1000))
+  return len
 }
 
 export const getDescriptionTime = content => {
@@ -58,7 +67,7 @@ export const updateDescriptionTime = (content, timestamp) => {
 const centerItems = (item, itemWidth, width) => {
   let rightPad = Math.floor((width - itemWidth) / 2)
   let leftPad = width - Math.min(width, itemWidth + rightPad)
-  
+
   return [" ".repeat(leftPad), item, " ".repeat(rightPad)]
 }
 

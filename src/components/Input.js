@@ -1,16 +1,19 @@
 import React, { useState } from "react"
-import { Text } from "ink"
+import { Text, render } from "ink"
 import chalk from "chalk"
 import { useActiveInput } from "../hooks"
+import Spinner from "ink-spinner"
 
 export const Input = ({
   value,
+  loading,
   onChange,
   onSubmit,
   placeholder,
   focus,
   minWidth = 0,
-  spacing = true
+  spacing = true,
+  loadingPlaceholder = "Loading"
 }) => {
   const [cursorOffset, setCursorOffset] = useState(value?.length || 0)
   const hasValue = (value || "").length > 0
@@ -54,7 +57,8 @@ export const Input = ({
     }
   )
 
-  let renderedValue = !hasValue ? placeholder : value
+  let renderedValue = value
+  if (!hasValue) renderedValue = placeholder
 
   if (focus) {
     if (hasValue) {
@@ -75,6 +79,15 @@ export const Input = ({
     } else if (placeholder) {
       renderedValue = chalk.inverse(placeholder)
     }
+  }
+
+  if (loading) {
+    renderedValue = (
+      <>
+        <Spinner type="dots" />
+        {` ${loadingPlaceholder}`.padEnd(minWidth - 1, " ")}
+      </>
+    )
   }
 
   return (

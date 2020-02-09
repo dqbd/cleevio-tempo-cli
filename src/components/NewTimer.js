@@ -5,6 +5,7 @@ import { TokenContext } from "../context"
 import { useActiveInput } from "../hooks"
 import { SearchList } from "./SearchList"
 import { Input } from "./Input"
+import Spinner from "ink-spinner"
 
 export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
   const token = useContext(TokenContext)
@@ -75,7 +76,12 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
     [token, onCreate]
   )
 
-  if (loading) return <Text>Creating a new timer...</Text>
+  if (loading)
+    return (
+      <Text>
+        <Spinner type="dots" /> Creating a new timer...
+      </Text>
+    )
   return (
     <Box flexDirection="column">
       <Color gray={!selected} blue={!search?.trim() && !focusList && selected}>
