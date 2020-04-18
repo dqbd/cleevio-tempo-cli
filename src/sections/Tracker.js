@@ -197,9 +197,9 @@ export function Tracker({
     if (!toggleIssue) {
       handleSearchChange("")
     } else {
-      lock({ y: true })
+      lock({ y: !tracker?.issueKey })
     }
-  }, [handleSearchChange, toggleIssue])
+  }, [handleSearchChange, toggleIssue, !tracker?.issueKey])
 
   let state = tracker.isPlaying ? "Stop" : "Play"
   if (loadEvent && loadEvent.row === SELECT_ROW) state = loadEvent.value
@@ -274,9 +274,8 @@ export function Tracker({
       </Box>
       <SearchList
         search={search}
-        token={token}
         focus={!!search?.trim() || toggleIssue}
-        preload={!search?.trim() && toggleIssue}
+        preload={!tracker?.issueKey && toggleIssue}
         onSelect={handleItemSelect}
       />
     </Box>
