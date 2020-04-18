@@ -29,7 +29,7 @@ import {
 import { TokenContext } from "../context"
 
 import { SearchList } from "./SearchList"
-import { Input } from "./Input"
+import { Input } from "../components/Input"
 
 export function Tracker({
   tracker,

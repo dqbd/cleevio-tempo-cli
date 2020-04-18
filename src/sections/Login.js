@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Text, Box, Color } from "ink"
 import Spinner from "ink-spinner"
 
-import { Input } from "./Input"
+import { Input } from "../components/Input"
 import { getTrackers } from "../api"
 
 export const Login = ({ onToken }) => {

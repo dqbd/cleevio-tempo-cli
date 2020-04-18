@@ -5,7 +5,7 @@ import { Text } from "ink"
 import { useIsMounted } from "../hooks"
 import { getListIssues } from "../api"
 import { TokenContext } from "../context"
-import { List } from "./List"
+import { List } from "../components/List"
 
 const fetchSearchItems = async (search, token) => {
   const items = await getListIssues(search, token)

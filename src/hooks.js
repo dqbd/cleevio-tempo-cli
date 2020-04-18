@@ -1,4 +1,4 @@
-import { useEffect, useContext, useRef } from "react"
+import { useEffect, useContext, useRef, useState } from "react"
 import { StdinContext } from "ink"
 
 export function useIsMounted() {
@@ -90,6 +90,8 @@ export const useActiveInput = (inputHandler, { active = true } = {}) => {
       stdin.off("data", handleData)
     }
   }, [active, stdin, inputHandler])
+
+  return 
 }
 
 export const useAsyncEffect = (callback, deps) => {

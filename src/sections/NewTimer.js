@@ -4,7 +4,7 @@ import { createTracker } from "../api"
 import { TokenContext } from "../context"
 import { useActiveInput } from "../hooks"
 import { SearchList } from "./SearchList"
-import { Input } from "./Input"
+import { Input } from "../components/Input"
 import Spinner from "ink-spinner"
 
 export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
