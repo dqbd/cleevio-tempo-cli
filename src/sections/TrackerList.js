@@ -8,6 +8,7 @@ import {
   useIsMounted,
   useActiveInput,
   useAsyncEffect,
+  useLockableInput,
 } from "../hooks"
 import { stateOrder, SELECT_ROW } from "../constants"
 import { TokenContext } from "../context"
@@ -29,7 +30,6 @@ export const List = () => {
   const token = useContext(TokenContext)
   const isMounted = useIsMounted()
   const [now, setNow] = useState(Date.now())
-  const [arrowFreeze, setArrowFreeze] = useState(false)
 
   const [errors, showError] = useState(false)
   const [trackers, setTrackers] = useState(false)
@@ -79,27 +79,20 @@ export const List = () => {
     }
   }, [token])
 
-  useActiveInput(
-    (_, key) => {
-      const trackersLen = (trackers || []).length
-      if (key.upArrow) {
-        setSelected(Math.max(0, selected - 1))
-      } else if (key.downArrow) {
-        setSelected(Math.min(trackersLen, selected + 1))
-      } else if (key.leftArrow && selected !== trackersLen) {
-        setRow(stateOrder[Math.max(0, stateOrder.indexOf(row) - 1)])
-      } else if (key.rightArrow && selected !== trackersLen) {
-        setRow(
-          stateOrder[
-            Math.min(stateOrder.length - 1, stateOrder.indexOf(row) + 1)
-          ]
-        )
-      }
-    },
-    {
-      active: !arrowFreeze,
+  const lock = useLockableInput((_, key) => {
+    const trackersLen = (trackers || []).length
+    if (key.upArrow) {
+      setSelected(Math.max(0, selected - 1))
+    } else if (key.downArrow) {
+      setSelected(Math.min(trackersLen, selected + 1))
+    } else if (key.leftArrow && selected !== trackersLen) {
+      setRow(stateOrder[Math.max(0, stateOrder.indexOf(row) - 1)])
+    } else if (key.rightArrow && selected !== trackersLen) {
+      setRow(
+        stateOrder[Math.min(stateOrder.length - 1, stateOrder.indexOf(row) + 1)]
+      )
     }
-  )
+  })
 
   useEffect(() => {
     const active = (trackers || []).filter(({ isPlaying }) => isPlaying)
@@ -140,7 +133,7 @@ export const List = () => {
                 tracker={tracker}
                 onUpdate={handleUpdate}
                 onDelete={handleDelete}
-                onArrowFreeze={setArrowFreeze}
+                lock={lock}
                 now={now}
                 row={row}
               />
@@ -149,7 +142,7 @@ export const List = () => {
           <NewTimer
             selected={selected === (trackers || []).length}
             onCreate={handleCreate}
-            onArrowFreeze={setArrowFreeze}
+            lock={lock}
           />
         </Box>
       )}

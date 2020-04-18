@@ -7,7 +7,7 @@ import { SearchList } from "./SearchList"
 import { Input } from "../components/Input"
 import Spinner from "ink-spinner"
 
-export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
+export const NewTimer = ({ selected, onCreate, lock }) => {
   const token = useContext(TokenContext)
   const [loading, setLoading] = useState(false)
 
@@ -28,11 +28,11 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
         }
       } else if (key.downArrow) {
         setFocusList(true)
-        onArrowFreeze(true)
+        lock({ all: true })
       } else if (key.upArrow) {
         if (!activeList) {
           setFocusList(false)
-          onArrowFreeze(false)
+          lock({ all: false })
         }
       }
     },
@@ -51,10 +51,10 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
 
   const handleChange = useCallback(
     (value) => {
-      onArrowFreeze(value && value.trim())
+      lock({ all: value && value.trim() })
       setSearch(value)
     },
-    [onArrowFreeze, setSearch]
+    [lock, setSearch]
   )
 
   const handleItemSelect = useCallback(

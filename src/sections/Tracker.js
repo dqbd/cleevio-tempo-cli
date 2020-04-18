@@ -12,7 +12,12 @@ import {
   SELECT_TIME,
 } from "../constants"
 
-import { useIsMounted, useActiveInput, useAsyncEffect } from "../hooks"
+import {
+  useIsMounted,
+  useActiveInput,
+  useAsyncEffect,
+  usePrevious,
+} from "../hooks"
 import {
   deleteTracker,
   updateTracker,
@@ -36,14 +41,13 @@ export function Tracker({
   selected,
   onUpdate,
   onDelete,
-  onArrowFreeze,
+  lock,
   now,
   row,
 }) {
   const toggleTime = selected && row === SELECT_TIME
   const toggleState = selected && row === SELECT_ROW
   const toggleIssue = selected && row === CHANGE_ISSUE
-  const toggleDesc = selected && row === DESCRIPTION
   const toggleLog = selected && row === LOG
   const toggleDelete = selected && row === DELETE
 
@@ -51,7 +55,6 @@ export function Tracker({
   const isMounted = useIsMounted()
   const [loadEvent, setLoadEvent] = useState(null)
   const [search, setSearch] = useState("")
-  const [desc, setDesc] = useState("")
   const [time, setTime] = useState("")
 
   useActiveInput(
@@ -132,10 +135,10 @@ export function Tracker({
 
   const handleSearchChange = useCallback(
     (value) => {
-      onArrowFreeze(value && value.trim())
+      lock({ all: value && value.trim(), y: !!toggleIssue })
       setSearch(value)
     },
-    [onArrowFreeze, setSearch]
+    [lock, setSearch, toggleIssue]
   )
 
   const handleItemSelect = useCallback(
@@ -162,10 +165,10 @@ export function Tracker({
 
   const handleTimeChange = useCallback(
     (value) => {
-      onArrowFreeze(value && value.trim())
+      lock({ all: value && value.trim() })
       setTime(value)
     },
-    [onArrowFreeze, setTime]
+    [lock, setTime]
   )
 
   const handleTimeSubmit = useCallback(async () => {
@@ -192,25 +195,11 @@ export function Tracker({
 
   useEffect(() => {
     if (!toggleIssue) {
-      onArrowFreeze(false)
-      setSearch("")
+      handleSearchChange("")
+    } else {
+      lock({ y: true })
     }
-  }, [toggleIssue])
-
-  useAsyncEffect(async () => {
-    if (!toggleDesc && desc && desc.trim()) {
-      onUpdate(
-        await updateTracker(
-          tracker.id,
-          {
-            description: desc,
-          },
-          token
-        )
-      )
-      if (isMounted.current) setDesc("")
-    }
-  }, [toggleDesc, isMounted, desc, tracker.id, token, onUpdate])
+  }, [handleSearchChange, toggleIssue])
 
   let state = tracker.isPlaying ? "Stop" : "Play"
   if (loadEvent && loadEvent.row === SELECT_ROW) state = loadEvent.value
@@ -281,8 +270,8 @@ export function Tracker({
       <SearchList
         search={search}
         token={token}
-        focus={!!(search && search.trim())}
-        preload={toggleIssue}
+        focus={!!search?.trim() || toggleIssue}
+        preload={!search?.trim() && toggleIssue}
         onSelect={handleItemSelect}
       />
     </Box>

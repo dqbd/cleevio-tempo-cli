@@ -50,11 +50,6 @@ export function SearchList({ search, onSelect, onHighlight, preload, focus }) {
 
   return (
     <>
-      {loading && (
-        <Text>
-          <Spinner type="dots" /> Loading results
-        </Text>
-      )}
       <List
         items={items}
         focus={focus}
@@ -62,6 +57,11 @@ export function SearchList({ search, onSelect, onHighlight, preload, focus }) {
         onSelect={onSelect}
         limit={5}
       />
+      {loading && (
+        <Text>
+          <Spinner type="dots" /> Loading results
+        </Text>
+      )}
     </>
   )
 }

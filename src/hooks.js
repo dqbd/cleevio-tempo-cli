@@ -1,6 +1,16 @@
 import { useEffect, useContext, useRef, useState } from "react"
 import { StdinContext } from "ink"
 
+export function usePrevious(value) {
+  const ref = useRef()
+
+  useEffect(() => {
+    ref.current = value
+  }, [value])
+
+  return ref.current
+}
+
 export function useIsMounted() {
   const isMounted = useRef(false)
   useEffect(() => {
@@ -91,7 +101,33 @@ export const useActiveInput = (inputHandler, { active = true } = {}) => {
     }
   }, [active, stdin, inputHandler])
 
-  return 
+  return
+}
+
+export const useLockableInput = (inputHandler) => {
+  const [locks, setLocks] = useState({})
+  const arrows = ["leftArrow", "rightArrow", "upArrow", "downArrow"]
+  useActiveInput(
+    (input, key, data) => {
+      const parsedLocks = {
+        leftArrow: locks.all || locks.x || locks.leftArrow,
+        rightArrow: locks.all || locks.x || locks.rightArrow,
+        upArrow: locks.all || locks.y || locks.upArrow,
+        downArrow: locks.all || locks.y || locks.downArrow,
+      }
+
+      if (arrows.some((arrowKey) => parsedLocks[arrowKey] && key[arrowKey])) {
+        return
+      }
+
+      inputHandler(input, key, data)
+    },
+    {
+      active: true,
+    }
+  )
+
+  return setLocks
 }
 
 export const useAsyncEffect = (callback, deps) => {
