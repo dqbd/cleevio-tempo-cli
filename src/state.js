@@ -22,9 +22,6 @@ export const timers = createSlice({
   }
 })
 
-
-
-
 export const store = configureStore({
   reducer: combineReducers({
     timers: timers.reducer

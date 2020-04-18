@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react"
+import React, { useState } from "react"
 import { Text, Box, Color } from "ink"
 import Spinner from "ink-spinner"
 
@@ -10,14 +10,11 @@ export const Login = ({ onToken }) => {
   const [errors, showErrors] = useState(false)
   const [value, setValue] = useState("")
 
-  const handleChange = useCallback(
-    value => {
-      !loading && setValue(value)
-    },
-    [setValue, loading]
-  )
+  const handleChange = (value) => {
+    !loading && setValue(value)
+  }
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = async () => {
     if (value?.trim()) {
       setLoading(true)
       try {
@@ -29,15 +26,14 @@ export const Login = ({ onToken }) => {
         setLoading(false)
       }
     }
-  }, [value, setLoading, getTrackers, onToken])
+  }
 
   return (
     <Box flexDirection="column">
       <Color gray>Please enter your Tempo API Token</Color>
       <Color blue>
         https://cleevio.atlassian.net/plugins/servlet/ac/io.tempo.jira/tempo-configuration
-      </Color>
-      {" "}
+      </Color>{" "}
       {loading && (
         <Text>
           <Spinner type="dots" /> Logging in

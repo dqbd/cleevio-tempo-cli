@@ -8,17 +8,15 @@ import { List } from "./TrackerList"
 import { Login } from "./Login"
 
 import pkg from "../../package.json"
-import { createWorklog } from "../api"
-import { getStartDate } from "../utils"
 
 const config = new Conf({
   schema: {
     tempoToken: {
-      type: "string"
-    }
+      type: "string",
+    },
   },
   projectName: pkg.name,
-  projectVersion: pkg.version
+  projectVersion: pkg.version,
 })
 
 class ErrorBoundary extends React.Component {
@@ -35,7 +33,7 @@ class ErrorBoundary extends React.Component {
 const InternalApp = ({ logout }) => {
   const [token, setToken] = useState(!logout ? config.get("tempoToken") : "")
   const handleToken = useCallback(
-    newToken => {
+    (newToken) => {
       config.set("tempoToken", newToken)
       setToken(newToken)
     },
@@ -60,7 +58,7 @@ const InternalApp = ({ logout }) => {
   )
 }
 
-export const App = props => (
+export const App = (props) => (
   <AppContext.Consumer>
     {({ exit }) => (
       <ErrorBoundary exit={exit}>

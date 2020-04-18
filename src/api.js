@@ -5,7 +5,7 @@ const getJiraToken = (() => {
   let cache = null,
     obtained = 0
 
-  return async token => {
+  return async (token) => {
     const now = Date.now()
     // TODO: move to redux state
     if (!cache || now - obtained > 1000 * 60 * 10) {
@@ -13,9 +13,9 @@ const getJiraToken = (() => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          authorization: `Bearer ${token}`
-        }
-      }).then(a => a.json())
+          authorization: `Bearer ${token}`,
+        },
+      }).then((a) => a.json())
       obtained = Date.now()
     }
 
@@ -25,7 +25,7 @@ const getJiraToken = (() => {
 
 const getJiraAccountId = (() => {
   let result = null
-  return async token => {
+  return async (token) => {
     if (!result) {
       const jira = await getJiraToken(token)
       const { accountId } = await fetch(
@@ -33,10 +33,10 @@ const getJiraAccountId = (() => {
         {
           headers: {
             "Content-Type": "application/json",
-            authorization: `Bearer ${jira.token}`
-          }
+            authorization: `Bearer ${jira.token}`,
+          },
         }
-      ).then(a => a.json())
+      ).then((a) => a.json())
       result = accountId
     }
     return result
@@ -48,9 +48,9 @@ export async function toggleTracker(id, token) {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      authorization: `Bearer ${token}`
-    }
-  }).then(a => a.json())
+      authorization: `Bearer ${token}`,
+    },
+  }).then((a) => a.json())
 }
 
 export async function getTrackers(token) {
@@ -58,9 +58,9 @@ export async function getTrackers(token) {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      authorization: `Bearer ${token}`
-    }
-  }).then(a => a.json())
+      authorization: `Bearer ${token}`,
+    },
+  }).then((a) => a.json())
 }
 
 export async function createTracker(token, payload = {}) {
@@ -68,21 +68,21 @@ export async function createTracker(token, payload = {}) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      authorization: `Bearer ${token}`
+      authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       isPlaying: true,
-      ...payload
-    })
-  }).then(a => a.json())
+      ...payload,
+    }),
+  }).then((a) => a.json())
 }
 export async function deleteTracker(id, token) {
   return fetch(`https://api.tempo.io/trackers/v1/${id}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
-      authorization: `Bearer ${token}`
-    }
+      authorization: `Bearer ${token}`,
+    },
   })
 }
 
@@ -91,10 +91,10 @@ export async function updateTracker(id, payload, token) {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      authorization: `Bearer ${token}`
+      authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(payload || {})
-  }).then(a => a.json())
+    body: JSON.stringify(payload || {}),
+  }).then((a) => a.json())
 }
 
 export async function createWorklog(payload, token) {
@@ -103,14 +103,14 @@ export async function createWorklog(payload, token) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      authorization: `Bearer ${token}`
+      authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       authorAccountId,
       startDate: getStartDate(),
-      ...payload
-    })
-  }).then(a => a.json())
+      ...payload,
+    }),
+  }).then((a) => a.json())
 
   return res
 }
@@ -132,10 +132,10 @@ export async function getListIssues(search, token) {
     {
       headers: {
         "Content-Type": "application/json",
-        authorization: `Bearer ${jira.token}`
-      }
+        authorization: `Bearer ${jira.token}`,
+      },
     }
-  ).then(a => a.json())
+  ).then((a) => a.json())
 
   const issues = payload.sections.reduce((memo, section) => {
     for (const issue of section.issues) {

@@ -3,7 +3,7 @@ import { Box } from "ink"
 
 const DESC_REGEX = /\s*cleevio-tempo-cli:<(?<human>.*?)><(?<timestamp>[+-]?[0-9]*)>\s*/gm
 
-export const parseDate = str =>
+export const parseDate = (str) =>
   typeof str === "string" ? Date.parse(`${str}Z`) : null
 
 export const getStartDate = (timestamp = Date.now()) => {
@@ -11,16 +11,16 @@ export const getStartDate = (timestamp = Date.now()) => {
   return [
     date.getFullYear(),
     `${date.getMonth() + 1}`.padStart(2, "0"),
-    `${date.getDate()}`.padStart(2, "0")
+    `${date.getDate()}`.padStart(2, "0"),
   ].join("-")
 }
 
-export const formatTime = seconds => {
+export const formatTime = (seconds) => {
   const absSeconds = Math.abs(seconds)
   const h = Math.floor(absSeconds / 3600)
   const m = Math.floor((absSeconds % 3600) / 60)
   const s = absSeconds % 60
-  const result = [h, m, s].map(i => `${i}`.padStart(2, "0")).join(":")
+  const result = [h, m, s].map((i) => `${i}`.padStart(2, "0")).join(":")
   if (seconds < 0) return `-${result}`
   return ` ${result}`
 }
@@ -38,7 +38,7 @@ export const getTimeSpent = (trackerDuration, description, now) => {
   return len
 }
 
-export const getDescriptionTime = content => {
+export const getDescriptionTime = (content) => {
   let match = undefined
   let result = 0
   do {

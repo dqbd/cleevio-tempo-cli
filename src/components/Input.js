@@ -13,7 +13,7 @@ export const Input = ({
   focus,
   minWidth = 0,
   spacing = true,
-  loadingPlaceholder = "Loading"
+  loadingPlaceholder = "Loading",
 }) => {
   const [cursorOffset, setCursorOffset] = useState(value?.length || 0)
   const hasValue = (value || "").length > 0
@@ -53,7 +53,7 @@ export const Input = ({
       }
     },
     {
-      active: focus
+      active: focus,
     }
   )
 

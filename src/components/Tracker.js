@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext } from "react"
 import { Text, Color, Box } from "ink"
-import Spinner from "ink-spinner"
 import parseDuration from "parse-duration"
 import open from "open"
 
@@ -10,7 +9,7 @@ import {
   DESCRIPTION,
   LOG,
   DELETE,
-  SELECT_TIME
+  SELECT_TIME,
 } from "../constants"
 
 import { useIsMounted, useActiveInput, useAsyncEffect } from "../hooks"
@@ -18,14 +17,14 @@ import {
   deleteTracker,
   updateTracker,
   toggleTracker,
-  createWorklog
+  createWorklog,
 } from "../api"
 import {
   getTimeSpent,
   centerText,
   formatTime,
   getDescriptionTime,
-  updateDescriptionTime
+  updateDescriptionTime,
 } from "../utils"
 import { TokenContext } from "../context"
 
@@ -39,7 +38,7 @@ export function Tracker({
   onDelete,
   onArrowFreeze,
   now,
-  row
+  row,
 }) {
   const toggleTime = selected && row === SELECT_TIME
   const toggleState = selected && row === SELECT_ROW
@@ -61,7 +60,7 @@ export function Tracker({
         if (toggleState) {
           setLoadEvent({
             row: SELECT_ROW,
-            value: tracker.isPlaying ? "Stopping" : "Starting"
+            value: tracker.isPlaying ? "Stopping" : "Starting",
           })
           onUpdate(await toggleTracker(tracker.id, token))
           isMounted.current && setLoadEvent(null)
@@ -78,14 +77,14 @@ export function Tracker({
           if (tracker.isPlaying) {
             setLoadEvent({
               row: LOG,
-              value: "Stopping"
+              value: "Stopping",
             })
             onUpdate(await toggleTracker(tracker.id, token))
           }
 
           setLoadEvent({
             row: LOG,
-            value: "Logging"
+            value: "Logging",
           })
 
           // log the time
@@ -100,7 +99,7 @@ export function Tracker({
                     Date.now()
                   ) / 1000
                 )
-              )
+              ),
             },
             token
           )
@@ -109,7 +108,7 @@ export function Tracker({
           if (worklog.self) {
             setLoadEvent({
               row: LOG,
-              value: "Deleting"
+              value: "Deleting",
             })
             await deleteTracker(tracker.id, token)
             onDelete(tracker)
@@ -119,7 +118,7 @@ export function Tracker({
         } else if (toggleDelete) {
           setLoadEvent({
             row: DELETE,
-            value: "Deleting"
+            value: "Deleting",
           })
           await deleteTracker(tracker.id, token)
           onDelete(tracker)
@@ -127,12 +126,12 @@ export function Tracker({
       }
     },
     {
-      active: !!selected
+      active: !!selected,
     }
   )
 
   const handleSearchChange = useCallback(
-    value => {
+    (value) => {
       onArrowFreeze(value && value.trim())
       setSearch(value)
     },
@@ -140,7 +139,7 @@ export function Tracker({
   )
 
   const handleItemSelect = useCallback(
-    async item => {
+    async (item) => {
       if (item) {
         const { key, value: id } = item
         setLoadEvent({ row: CHANGE_ISSUE })
@@ -149,7 +148,7 @@ export function Tracker({
             tracker.id,
             {
               issueId: id,
-              issueKey: key
+              issueKey: key,
             },
             token
           )
@@ -162,7 +161,7 @@ export function Tracker({
   )
 
   const handleTimeChange = useCallback(
-    value => {
+    (value) => {
       onArrowFreeze(value && value.trim())
       setTime(value)
     },
@@ -180,7 +179,7 @@ export function Tracker({
       await updateTracker(
         id,
         {
-          description: updateDescriptionTime(description, offset)
+          description: updateDescriptionTime(description, offset),
         },
         token
       )
@@ -192,7 +191,10 @@ export function Tracker({
   }, [time, token, onUpdate, tracker])
 
   useEffect(() => {
-    if (!toggleIssue) handleSearchChange("")
+    if (!toggleIssue) {
+      onArrowFreeze(false)
+      setSearch("")
+    }
   }, [toggleIssue])
 
   useAsyncEffect(async () => {
@@ -201,7 +203,7 @@ export function Tracker({
         await updateTracker(
           tracker.id,
           {
-            description: desc
+            description: desc,
           },
           token
         )
@@ -280,6 +282,7 @@ export function Tracker({
         search={search}
         token={token}
         focus={!!(search && search.trim())}
+        preload={toggleIssue}
         onSelect={handleItemSelect}
       />
     </Box>

@@ -50,7 +50,7 @@ export const useActiveInput = (inputHandler, { active = true } = {}) => {
       return
     }
 
-    const handleData = data => {
+    const handleData = (data) => {
       let input = String(data)
       const key = {
         upArrow: input === "\u001B[A",
@@ -61,7 +61,7 @@ export const useActiveInput = (inputHandler, { active = true } = {}) => {
         escape: input === "\u001B",
         ctrl: false,
         shift: false,
-        meta: false
+        meta: false,
       }
 
       // Copied from `keypress` module

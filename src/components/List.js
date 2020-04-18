@@ -8,7 +8,7 @@ export const List = ({
   onHighlight,
   onSelect,
   hideOnFocus = true,
-  limit = 5
+  limit = 5,
 }) => {
   const [selectedIndex, setIndex] = useState(0)
   const [pageIndex, setPageIndex] = useState(0)
@@ -23,43 +23,46 @@ export const List = ({
     }
   }, [items, focus])
 
-  useActiveInput((_, ctrl) => {
-    if (!focus) return
+  useActiveInput(
+    (_, ctrl) => {
+      if (!focus) return
 
-    let nextIndex = selectedIndex
-    let nextPageIndex = pageIndex
-    if (ctrl.upArrow) {
-      nextIndex -= 1
-    } else if (ctrl.downArrow) {
-      nextIndex += 1
-    } else if (ctrl.return) {
-      if (onSelect) {
-        onSelect(items[nextIndex])
+      let nextIndex = selectedIndex
+      let nextPageIndex = pageIndex
+      if (ctrl.upArrow) {
+        nextIndex -= 1
+      } else if (ctrl.downArrow) {
+        nextIndex += 1
+      } else if (ctrl.return) {
+        if (onSelect) {
+          onSelect(items[nextIndex])
+        }
+        return
       }
-      return
+
+      nextIndex = Math.max(0, Math.min((items || []).length - 1, nextIndex))
+
+      if (onHighlight) {
+        onHighlight(items[nextIndex], nextIndex)
+      }
+
+      if (nextIndex >= pageIndex + limit) {
+        nextPageIndex += 1
+      } else if (nextIndex < pageIndex) {
+        nextPageIndex -= 1
+      }
+
+      nextPageIndex = Math.max(
+        0,
+        Math.min((items || []).length - 1, nextPageIndex)
+      )
+      setIndex(nextIndex)
+      setPageIndex(nextPageIndex)
+    },
+    {
+      active: focus,
     }
-
-    nextIndex = Math.max(0, Math.min((items || []).length - 1, nextIndex))
-
-    if (onHighlight) {
-      onHighlight(items[nextIndex], nextIndex)
-    }
-
-    if (nextIndex >= pageIndex + limit) {
-      nextPageIndex += 1
-    } else if (nextIndex < pageIndex) {
-      nextPageIndex -= 1
-    }
-
-    nextPageIndex = Math.max(
-      0,
-      Math.min((items || []).length - 1, nextPageIndex)
-    )
-    setIndex(nextIndex)
-    setPageIndex(nextPageIndex)
-  }, {
-    active: focus
-  })
+  )
 
   return (
     <Box flexDirection="column">

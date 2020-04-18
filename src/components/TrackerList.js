@@ -1,5 +1,5 @@
 "use strict"
-import React, { useContext, useState, useEffect } from "react"
+import React, { useContext, useCallback, useState, useEffect } from "react"
 import { Text, Box } from "ink"
 
 import pkg from "../../package.json"
@@ -7,7 +7,7 @@ import {
   useInterval,
   useIsMounted,
   useActiveInput,
-  useAsyncEffect
+  useAsyncEffect,
 } from "../hooks"
 import { stateOrder, SELECT_ROW } from "../constants"
 import { TokenContext } from "../context"
@@ -18,6 +18,12 @@ import { Tracker } from "./Tracker"
 import { NewTimer } from "./NewTimer"
 
 import Spinner from "ink-spinner"
+
+const getSortedTrackers = (trackers) => {
+  return (trackers || []).sort(
+    ({ createdDate: a }, { createdDate: b }) => parseDate(a) - parseDate(b)
+  )
+}
 
 export const List = () => {
   const token = useContext(TokenContext)
@@ -30,60 +36,48 @@ export const List = () => {
   const [selected, setSelected] = useState(0)
   const [row, setRow] = useState(SELECT_ROW)
 
-  const setSortedTrackers = React.useCallback(
-    trackers => {
-      if (isMounted.current) {
-        setTrackers(
-          (trackers || []).sort(
-            ({ createdDate: a }, { createdDate: b }) =>
-              parseDate(a) - parseDate(b)
-          )
-        )
-      }
-    },
-    [isMounted, setTrackers]
-  )
+  const setSortedTrackers = (cb) => {
+    if (isMounted.current) {
+      setTrackers((trackers) => getSortedTrackers(cb([...(trackers || [])])))
+    }
+  }
 
-  const handleUpdate = React.useCallback(
-    tracker => {
-      setSortedTrackers(
-        trackers.map(tempTracker => {
-          if (tempTracker.id === tracker.id) {
-            return tracker
-          }
-          return tempTracker
-        })
-      )
-    },
-    [setSortedTrackers, trackers]
-  )
+  const handleUpdate = (tracker) => {
+    setSortedTrackers((trackers) =>
+      trackers.map((tempTracker) => {
+        if (tempTracker.id === tracker.id) {
+          return tracker
+        }
+        return tempTracker
+      })
+    )
+  }
 
-  const handleDelete = React.useCallback(
-    tracker => {
-      setSelected(Math.max(0, selected - 1))
-      setSortedTrackers(
-        trackers.filter(tempTracker => {
-          return tempTracker.id !== tracker.id
-        })
-      )
-    },
-    [selected, setSortedTrackers, trackers]
-  )
+  const handleDelete = (tracker) => {
+    setSelected((selected) => Math.max(0, selected - 1))
+    setSortedTrackers((trackers) =>
+      trackers.filter((tempTracker) => {
+        return tempTracker.id !== tracker.id
+      })
+    )
+  }
 
-  const handleCreate = React.useCallback(
-    tracker => {
-      setSortedTrackers([...trackers, tracker])
-    },
-    [setSortedTrackers, trackers]
-  )
+  const handleCreate = (tracker) => {
+    setSortedTrackers((trackers) => {
+      trackers.push(tracker)
+      return trackers
+    })
+  }
 
-  const fetchTrackers = React.useCallback(async () => {
+  const fetchTrackers = useCallback(async () => {
     try {
-      setSortedTrackers(await getTrackers(token))
+      const trackers = await getTrackers(token)
+      setSortedTrackers(() => trackers)
+      if (isMounted.current) showError(false)
     } catch {
       if (isMounted.current) showError(true)
     }
-  }, [showError, setSortedTrackers, getTrackers, token, isMounted])
+  }, [token])
 
   useActiveInput(
     (_, key) => {
@@ -103,7 +97,7 @@ export const List = () => {
       }
     },
     {
-      active: !arrowFreeze
+      active: !arrowFreeze,
     }
   )
 

@@ -14,18 +14,12 @@ const fetchSearchItems = async (search, token) => {
     items: items.map(({ key, summaryText, id }) => ({
       value: id,
       label: `${key} - ${summaryText}`,
-      key
-    }))
+      key,
+    })),
   }
 }
 
-export function SearchList({
-  search,
-  onSelect,
-  onHighlight,
-  preload,
-  focus
-}) {
+export function SearchList({ search, onSelect, onHighlight, preload, focus }) {
   const token = useContext(TokenContext)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
@@ -39,7 +33,7 @@ export function SearchList({
     if (hasSearch || preload) {
       setItems([])
       setLoading(true)
-      fetchSearchItems(search, token).then(payload => {
+      fetchSearchItems(search, token).then((payload) => {
         if (queryRef.current === payload.search && isMounted.current) {
           setItems(payload.items)
           setLoading(false)

@@ -37,7 +37,7 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
       }
     },
     {
-      active: !!selected && !hasSearch
+      active: !!selected && !hasSearch,
     }
   )
 
@@ -50,7 +50,7 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
   })
 
   const handleChange = useCallback(
-    value => {
+    (value) => {
       onArrowFreeze(value && value.trim())
       setSearch(value)
     },
@@ -58,7 +58,7 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
   )
 
   const handleItemSelect = useCallback(
-    async item => {
+    async (item) => {
       if (item) {
         setLoading(true)
         setFocusList(false)
@@ -66,7 +66,7 @@ export const NewTimer = ({ selected, onCreate, onArrowFreeze }) => {
         onCreate(
           await createTracker(token, {
             issueId: item.value,
-            issueKey: item.key
+            issueKey: item.key,
           })
         )
         setLoading(false)

@@ -2,9 +2,10 @@
 import React from "react"
 import meow from "meow"
 import { render } from "ink"
-import { App } from './components/App'
+import { App } from "./components/App"
 
-const cli = meow(`
+const cli = meow(
+  `
   Usage
     $ cleevio-tempo-cli
 
@@ -14,26 +15,26 @@ const cli = meow(`
 
   Examples
     $ cleevio-tempo-cli
-`, {
-  flags: {
-    logout: {
-      type: "boolean",
-      default: false,
+`,
+  {
+    flags: {
+      logout: {
+        type: "boolean",
+        default: false,
+      },
+      debug: {
+        type: "boolean",
+        default: false,
+      },
     },
-    debug: {
-      type: "boolean",
-      default: false,
-    }
-  }
-})
-
-const { waitUntilExit } = render(
-  React.createElement(App, cli.flags), {
-    debug: cli.flags.debug
   }
 )
 
-waitUntilExit().catch(error => {
+const { waitUntilExit } = render(React.createElement(App, cli.flags), {
+  debug: cli.flags.debug,
+})
+
+waitUntilExit().catch((error) => {
   console.error(error)
   return Promise.reject(error)
-}) 
+})
