@@ -237,21 +237,26 @@ export function Tracker({
           green={!toggleState && !tracker.isPlaying}
           bgGreen={toggleState && !tracker.isPlaying}
         >
-          <Text bold={toggleState}>{state}</Text>
+          <Text bold={!!toggleState}>{state}</Text>
         </Color>
         <Color
+          white={toggleLog}
           gray={!toggleLog && !tracker.issueKey}
           inverse={toggleLog && !tracker.issueKey}
           blue={!toggleLog && tracker.issueKey}
           bgBlue={toggleLog && tracker.issueKey}
         >
-          {loadEvent?.row !== LOG && centerText("Log Time", 10)}
-          {loadEvent?.row === LOG &&
-            centerText(loadEvent?.value || "Logging", 10)}
+          <Text bold={!!(toggleLog && tracker.issueKey)}>
+            {loadEvent?.row !== LOG && centerText("Log Time", 10)}
+            {loadEvent?.row === LOG &&
+              centerText(loadEvent?.value || "Logging", 10)}
+          </Text>
         </Color>
-        <Color red={!toggleDelete} bgRed={toggleDelete} white={toggleLog}>
-          {loadEvent?.row === DELETE && centerText("Deleting", 10)}
-          {loadEvent?.row !== DELETE && centerText("Delete", 10)}
+        <Color red={!toggleDelete} bgRed={toggleDelete} white={toggleDelete}>
+          <Text bold={!!toggleDelete}>
+            {loadEvent?.row === DELETE && centerText("Deleting", 10)}
+            {loadEvent?.row !== DELETE && centerText("Delete", 10)}
+          </Text>
         </Color>
         <Color bgBlue={toggleIssue}>
           <Input
