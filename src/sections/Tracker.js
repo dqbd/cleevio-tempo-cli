@@ -6,18 +6,12 @@ import open from "open"
 import {
   SELECT_ROW,
   CHANGE_ISSUE,
-  DESCRIPTION,
   LOG,
   DELETE,
   SELECT_TIME,
 } from "../constants"
 
-import {
-  useIsMounted,
-  useActiveInput,
-  useAsyncEffect,
-  usePrevious,
-} from "../hooks"
+import { useIsMounted, useActiveInput } from "../hooks"
 import {
   deleteTracker,
   updateTracker,

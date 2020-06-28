@@ -21,7 +21,7 @@ export const List = ({
         onHighlight(items[0], 0)
       }
     }
-  }, [items, focus])
+  }, [items, focus, onHighlight])
 
   useActiveInput(
     (_, ctrl) => {

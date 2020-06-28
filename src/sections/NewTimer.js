@@ -41,13 +41,13 @@ export const NewTimer = ({ selected, onCreate, lock }) => {
     }
   )
 
-  const handleHighlight = useCallback((item, index) => {
+  const handleHighlight = (_, index) => {
     if (index !== 0) {
       setActiveList(true)
     } else {
       setActiveList(false)
     }
-  })
+  }
 
   const handleChange = useCallback(
     (value) => {
@@ -73,7 +73,7 @@ export const NewTimer = ({ selected, onCreate, lock }) => {
       }
       handleChange("")
     },
-    [token, onCreate]
+    [token, onCreate, handleChange]
   )
 
   if (loading)

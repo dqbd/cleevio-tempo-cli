@@ -1,4 +1,3 @@
-"use strict"
 import React, { useContext, useCallback, useState, useEffect } from "react"
 import { Text, Box } from "ink"
 
@@ -6,7 +5,6 @@ import pkg from "../../package.json"
 import {
   useInterval,
   useIsMounted,
-  useActiveInput,
   useAsyncEffect,
   useLockableInput,
 } from "../hooks"
@@ -36,11 +34,14 @@ export const List = () => {
   const [selected, setSelected] = useState(0)
   const [row, setRow] = useState(SELECT_ROW)
 
-  const setSortedTrackers = (cb) => {
-    if (isMounted.current) {
-      setTrackers((trackers) => getSortedTrackers(cb([...(trackers || [])])))
-    }
-  }
+  const setSortedTrackers = useCallback(
+    (cb) => {
+      if (isMounted.current) {
+        setTrackers((trackers) => getSortedTrackers(cb([...(trackers || [])])))
+      }
+    },
+    [isMounted]
+  )
 
   const handleUpdate = (tracker) => {
     setSortedTrackers((trackers) =>

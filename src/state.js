@@ -9,7 +9,7 @@ export const timers = createSlice({
   },
   reducers: {
     setTimers: {
-      reducer(_, { payload }) {
+      reducer(state, { payload }) {
         state.list = payload
       },
       prepare: value => ({

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Text, render } from "ink"
+import { Text } from "ink"
 import chalk from "chalk"
 import { useActiveInput } from "../hooks"
 import Spinner from "ink-spinner"

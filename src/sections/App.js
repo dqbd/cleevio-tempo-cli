@@ -1,4 +1,3 @@
-"use strict"
 import React, { useState, useCallback, useEffect } from "react"
 import Conf from "conf"
 

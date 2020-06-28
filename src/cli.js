@@ -1,4 +1,3 @@
-"use strict"
 import React from "react"
 import meow from "meow"
 import { render } from "ink"
