@@ -123,8 +123,8 @@ export async function getListIssues(search, token) {
     "currentJQL",
     `project in projectsWhereUserHasPermission("Work on issues")`
   )
-  query.append("showSubTasks", true)
-  query.append("showSubTaskParent", true)
+  query.append("showSubTasks", "true")
+  query.append("showSubTaskParent", "true")
   query.append("query", search)
 
   const payload = await fetch(

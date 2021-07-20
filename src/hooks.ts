@@ -15,13 +15,13 @@ export function useIsMounted() {
   const isMounted = useRef(false)
   useEffect(() => {
     isMounted.current = true
-    return () => (isMounted.current = false)
+    return () => void (isMounted.current = false)
   }, [])
   return isMounted
 }
 
-export function useInterval(callback, delay) {
-  const savedCallback = useRef()
+export function useInterval(callback: () => void, delay: number) {
+  const savedCallback = useRef<() => void>()
 
   // Remember the latest callback.
   useEffect(() => {
@@ -31,12 +31,13 @@ export function useInterval(callback, delay) {
   // Set up the interval.
   useEffect(() => {
     function tick() {
-      savedCallback.current()
+      savedCallback.current?.()
     }
     if (delay !== null) {
       let id = setInterval(tick, delay)
       return () => clearInterval(id)
     }
+    return void 0
   }, [delay])
 }
 

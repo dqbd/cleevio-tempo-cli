@@ -4,26 +4,26 @@ import { parseDate } from "./utils"
 export const timers = createSlice({
   name: "timers",
   initialState: {
-		list: [],
-		loading: false,
+    list: [],
+    loading: false,
   },
   reducers: {
     setTimers: {
       reducer(state, { payload }) {
         state.list = payload
       },
-      prepare: value => ({
+      prepare: (value) => ({
         payload: (value || []).sort(
           ({ createdDate: a }, { createdDate: b }) =>
             parseDate(a) - parseDate(b)
-        )
-      })
+        ),
+      }),
     },
-  }
+  },
 })
 
 export const store = configureStore({
   reducer: combineReducers({
-    timers: timers.reducer
-  })
+    timers: timers.reducer,
+  }),
 })

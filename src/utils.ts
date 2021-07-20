@@ -1,7 +1,8 @@
 import React from "react"
 import { Box } from "ink"
 
-const DESC_REGEX = /\s*cleevio-tempo-cli:<(?<human>.*?)><(?<timestamp>[+-]?[0-9]*)>\s*/gm
+const DESC_REGEX =
+  /\s*cleevio-tempo-cli:<(?<human>.*?)><(?<timestamp>[+-]?[0-9]*)>\s*/gm
 
 export const parseDate = (str) =>
   typeof str === "string" ? Date.parse(`${str}Z`) : null
