@@ -8,7 +8,7 @@ import { Login } from "./Login"
 
 import pkg from "../../package.json"
 
-const config = new Conf({
+const config = new Conf<{ tempoToken: string }>({
   schema: {
     tempoToken: {
       type: "string",
@@ -18,9 +18,12 @@ const config = new Conf({
   projectVersion: pkg.version,
 })
 
-class ErrorBoundary extends React.Component {
-  componentDidCatch(error) {
+class ErrorBoundary extends React.Component<{
+  exit?: (error?: Error) => void
+}> {
+  componentDidCatch(error: Error) {
     console.log(error)
+    this.props.exit?.(error)
     process.exit(1)
   }
 
@@ -29,7 +32,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const InternalApp = ({ logout }) => {
+const InternalApp = ({ logout }: { logout: boolean; debug: boolean }) => {
   const [token, setToken] = useState(!logout ? config.get("tempoToken") : "")
   const handleToken = useCallback(
     (newToken) => {
@@ -57,7 +60,7 @@ const InternalApp = ({ logout }) => {
   )
 }
 
-export const App = (props) => (
+export const App = (props: { logout: boolean; debug: boolean }) => (
   <AppContext.Consumer>
     {({ exit }) => (
       <ErrorBoundary exit={exit}>

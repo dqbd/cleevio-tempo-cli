@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { ReactNode, useState } from "react"
 import { Text } from "ink"
 import chalk from "chalk"
 import { useActiveInput } from "../hooks"
@@ -14,6 +14,16 @@ export const Input = ({
   minWidth = 0,
   spacing = true,
   loadingPlaceholder = "Loading",
+}: {
+  value: string
+  loading?: boolean
+  onChange: (value: string) => void
+  onSubmit?: () => void
+  placeholder?: string
+  focus?: boolean
+  minWidth?: number
+  spacing?: boolean
+  loadingPlaceholder?: string
 }) => {
   const [cursorOffset, setCursorOffset] = useState(value?.length || 0)
   const hasValue = (value || "").length > 0
@@ -57,7 +67,7 @@ export const Input = ({
     }
   )
 
-  let renderedValue = value
+  let renderedValue: ReactNode = value
   if (!hasValue) renderedValue = placeholder
 
   if (focus) {

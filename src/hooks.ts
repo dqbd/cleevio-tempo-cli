@@ -1,8 +1,8 @@
-import { useEffect, useContext, useRef, useState } from "react"
+import React, { useEffect, useContext, useRef, useState } from "react"
 import { StdinContext } from "ink"
 
-export function usePrevious(value) {
-  const ref = useRef()
+export function usePrevious<T>(value: T) {
+  const ref = useRef<T>()
 
   useEffect(() => {
     ref.current = value
@@ -41,7 +41,26 @@ export function useInterval(callback: () => void, delay: number) {
   }, [delay])
 }
 
-export const useActiveInput = (inputHandler, { active = true } = {}) => {
+interface InputKey {
+  upArrow: boolean
+  downArrow: boolean
+  leftArrow: boolean
+  rightArrow: boolean
+  return: boolean
+  escape: boolean
+  ctrl: boolean
+  shift: boolean
+  meta: boolean
+}
+
+interface InputHandler {
+  (input: string, keys: InputKey, data: string): void
+}
+
+export const useActiveInput = (
+  inputHandler: InputHandler,
+  { active = true } = {}
+) => {
   const { stdin, setRawMode } = useContext(StdinContext)
 
   useEffect(() => {
@@ -61,7 +80,7 @@ export const useActiveInput = (inputHandler, { active = true } = {}) => {
       return
     }
 
-    const handleData = (data) => {
+    const handleData = (data: Buffer) => {
       let input = String(data)
       const key = {
         upArrow: input === "\u001B[A",
@@ -105,9 +124,24 @@ export const useActiveInput = (inputHandler, { active = true } = {}) => {
   return
 }
 
-export const useLockableInput = (inputHandler) => {
-  const [locks, setLocks] = useState({})
-  const arrows = ["leftArrow", "rightArrow", "upArrow", "downArrow"]
+interface LockFlags {
+  all?: boolean
+  x?: boolean
+  y?: boolean
+  leftArrow?: boolean
+  rightArrow?: boolean
+  upArrow?: boolean
+  downArrow?: boolean
+}
+
+export interface LockCallback {
+  (locks: LockFlags): void
+}
+
+export const useLockableInput = (inputHandler: InputHandler): LockCallback => {
+  const [locks, setLocks] = useState<LockFlags>({})
+
+  const arrows = ["leftArrow", "rightArrow", "upArrow", "downArrow"] as const
   useActiveInput(
     (input, key, data) => {
       const parsedLocks = {
@@ -131,7 +165,10 @@ export const useLockableInput = (inputHandler) => {
   return setLocks
 }
 
-export const useAsyncEffect = (callback, deps) => {
+export const useAsyncEffect = (
+  callback: React.EffectCallback,
+  deps?: React.DependencyList
+): void => {
   useEffect(() => {
     ;(async () => {
       await callback()

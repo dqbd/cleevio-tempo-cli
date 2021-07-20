@@ -3,15 +3,9 @@ import { Text, Color, Box } from "ink"
 import parseDuration from "parse-duration"
 import open from "open"
 
-import {
-  SELECT_ROW,
-  CHANGE_ISSUE,
-  LOG,
-  DELETE,
-  SELECT_TIME,
-} from "../constants"
+import { State } from "../constants"
 
-import { useIsMounted, useActiveInput } from "../hooks"
+import { useIsMounted, useActiveInput, LockCallback } from "../hooks"
 import {
   deleteTracker,
   updateTracker,
@@ -29,6 +23,7 @@ import { TokenContext } from "../context"
 
 import { SearchList } from "./SearchList"
 import { Input } from "../components/Input"
+import { TrackerDto } from "types"
 
 export function Tracker({
   tracker,
@@ -38,16 +33,27 @@ export function Tracker({
   lock,
   now,
   row,
+}: {
+  tracker: TrackerDto
+  selected: boolean
+  onUpdate: (tracker: TrackerDto) => void
+  onDelete: (tracker: TrackerDto) => void
+  lock: LockCallback
+  now: number
+  row: State
 }) {
-  const toggleTime = selected && row === SELECT_TIME
-  const toggleState = selected && row === SELECT_ROW
-  const toggleIssue = selected && row === CHANGE_ISSUE
-  const toggleLog = selected && row === LOG
-  const toggleDelete = selected && row === DELETE
+  const toggleTime = selected && row === State.SELECT_TIME
+  const toggleState = selected && row === State.SELECT_ROW
+  const toggleIssue = selected && row === State.CHANGE_ISSUE
+  const toggleLog = selected && row === State.LOG
+  const toggleDelete = selected && row === State.DELETE
 
   const token = useContext(TokenContext)
   const isMounted = useIsMounted()
-  const [loadEvent, setLoadEvent] = useState(null)
+  const [loadEvent, setLoadEvent] = useState<{
+    row: State
+    value?: string
+  } | null>(null)
   const [search, setSearch] = useState("")
   const [time, setTime] = useState("")
 
@@ -56,7 +62,7 @@ export function Tracker({
       if (key.return || input === " ") {
         if (toggleState) {
           setLoadEvent({
-            row: SELECT_ROW,
+            row: State.SELECT_ROW,
             value: tracker.isPlaying ? "Stopping" : "Starting",
           })
           onUpdate(await toggleTracker(tracker.id, token))
@@ -72,17 +78,11 @@ export function Tracker({
 
           // pause the timer first if not paused
           if (tracker.isPlaying) {
-            setLoadEvent({
-              row: LOG,
-              value: "Stopping",
-            })
+            setLoadEvent({ row: State.LOG, value: "Stopping" })
             onUpdate(await toggleTracker(tracker.id, token))
           }
 
-          setLoadEvent({
-            row: LOG,
-            value: "Logging",
-          })
+          setLoadEvent({ row: State.LOG, value: "Logging" })
 
           // log the time
           const worklog = await createWorklog(
@@ -103,20 +103,14 @@ export function Tracker({
 
           // delete the tracker if successfull
           if (worklog.self) {
-            setLoadEvent({
-              row: LOG,
-              value: "Deleting",
-            })
+            setLoadEvent({ row: State.LOG, value: "Deleting" })
             await deleteTracker(tracker.id, token)
             onDelete(tracker)
           }
 
           isMounted.current && setLoadEvent(null)
         } else if (toggleDelete) {
-          setLoadEvent({
-            row: DELETE,
-            value: "Deleting",
-          })
+          setLoadEvent({ row: State.DELETE, value: "Deleting" })
           await deleteTracker(tracker.id, token)
           onDelete(tracker)
         }
@@ -139,16 +133,9 @@ export function Tracker({
     async (item) => {
       if (item) {
         const { key, value: id } = item
-        setLoadEvent({ row: CHANGE_ISSUE })
+        setLoadEvent({ row: State.CHANGE_ISSUE })
         onUpdate(
-          await updateTracker(
-            tracker.id,
-            {
-              issueId: id,
-              issueKey: key,
-            },
-            token
-          )
+          await updateTracker(tracker.id, { issueId: id, issueKey: key }, token)
         )
         setLoadEvent(null)
       }
@@ -168,16 +155,16 @@ export function Tracker({
   const handleTimeSubmit = useCallback(async () => {
     if (!time?.trim()) return
 
-    setLoadEvent({ row: SELECT_TIME })
+    setLoadEvent({ row: State.SELECT_TIME })
 
     const { id, description } = tracker
-    const offset = getDescriptionTime(description || "") + parseDuration(time)
+    const offset =
+      getDescriptionTime(description || "") + (parseDuration(time) ?? 0)
+
     onUpdate(
       await updateTracker(
         id,
-        {
-          description: updateDescriptionTime(description, offset),
-        },
+        { description: updateDescriptionTime(description, offset) },
         token
       )
     )
@@ -195,9 +182,9 @@ export function Tracker({
     }
   }, [handleSearchChange, toggleIssue, !tracker?.issueKey])
 
-  let state = tracker.isPlaying ? "Stop" : "Play"
-  if (loadEvent && loadEvent.row === SELECT_ROW) state = loadEvent.value
-  state = centerText(state, 10)
+  let state: string | undefined = tracker.isPlaying ? "Stop" : "Play"
+  if (loadEvent && loadEvent.row === State.SELECT_ROW) state = loadEvent.value
+  if (state) state = centerText(state, 10)
 
   return (
     <Box flexDirection="column">
@@ -206,7 +193,7 @@ export function Tracker({
           <Color bgGreen={tracker.isPlaying} bgRed={!tracker.isPlaying}>
             <Input
               value={time}
-              loading={loadEvent?.row === SELECT_TIME}
+              loading={loadEvent?.row === State.SELECT_TIME}
               loadingPlaceholder="Saving"
               minWidth={9}
               onChange={handleTimeChange}
@@ -237,26 +224,26 @@ export function Tracker({
           white={toggleLog}
           gray={!toggleLog && !tracker.issueKey}
           inverse={toggleLog && !tracker.issueKey}
-          blue={!toggleLog && tracker.issueKey}
-          bgBlue={toggleLog && tracker.issueKey}
+          blue={!toggleLog && !!tracker.issueKey}
+          bgBlue={toggleLog && !!tracker.issueKey}
         >
           <Text bold={!!(toggleLog && tracker.issueKey)}>
-            {loadEvent?.row !== LOG && centerText("Log Time", 10)}
-            {loadEvent?.row === LOG &&
+            {loadEvent?.row !== State.LOG && centerText("Log Time", 10)}
+            {loadEvent?.row === State.LOG &&
               centerText(loadEvent?.value || "Logging", 10)}
           </Text>
         </Color>
         <Color red={!toggleDelete} bgRed={toggleDelete} white={toggleDelete}>
           <Text bold={!!toggleDelete}>
-            {loadEvent?.row === DELETE && centerText("Deleting", 10)}
-            {loadEvent?.row !== DELETE && centerText("Delete", 10)}
+            {loadEvent?.row === State.DELETE && centerText("Deleting", 10)}
+            {loadEvent?.row !== State.DELETE && centerText("Delete", 10)}
           </Text>
         </Color>
         <Color bgBlue={toggleIssue}>
           <Input
             value={search}
             onChange={handleSearchChange}
-            loading={loadEvent?.row === CHANGE_ISSUE}
+            loading={loadEvent?.row === State.CHANGE_ISSUE}
             loadingPlaceholder="Saving"
             placeholder={
               tracker?.issueKey ?? (toggleIssue ? "type an issue..." : "...")

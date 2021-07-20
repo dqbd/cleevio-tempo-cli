@@ -1,11 +1,13 @@
 import fetch from "node-fetch"
+import { IssueDto, JiraAccountDto, JiraTokenDto, TrackerDto } from "types"
+import { URLSearchParams } from "url"
 import { getStartDate } from "./utils"
 
 const getJiraToken = (() => {
-  let cache = null,
-    obtained = 0
+  let cache: Promise<JiraTokenDto> | null = null
+  let obtained = 0
 
-  return async (token) => {
+  return async (token: string | null) => {
     const now = Date.now()
     // TODO: move to redux state
     if (!cache || now - obtained > 1000 * 60 * 10) {
@@ -24,11 +26,11 @@ const getJiraToken = (() => {
 })()
 
 const getJiraAccountId = (() => {
-  let result = null
-  return async (token) => {
+  let result: string | null = null
+  return async (token: string | null) => {
     if (!result) {
       const jira = await getJiraToken(token)
-      const { accountId } = await fetch(
+      const { accountId }: JiraAccountDto = await fetch(
         `${jira.client.baseUrl}/rest/api/3/myself`,
         {
           headers: {
@@ -43,7 +45,10 @@ const getJiraAccountId = (() => {
   }
 })()
 
-export async function toggleTracker(id, token) {
+export async function toggleTracker(
+  id: string,
+  token: string | null
+): Promise<TrackerDto> {
   return fetch(`https://api.tempo.io/trackers/v1/${id}/toggle`, {
     method: "PATCH",
     headers: {
@@ -53,7 +58,7 @@ export async function toggleTracker(id, token) {
   }).then((a) => a.json())
 }
 
-export async function getTrackers(token) {
+export async function getTrackers(token: string | null): Promise<TrackerDto> {
   return fetch("https://api.tempo.io/trackers/v1/", {
     method: "GET",
     headers: {
@@ -63,7 +68,10 @@ export async function getTrackers(token) {
   }).then((a) => a.json())
 }
 
-export async function createTracker(token, payload = {}) {
+export async function createTracker(
+  token: string | null,
+  payload: { issueId?: string; issueKey?: string } = {}
+): Promise<TrackerDto> {
   return fetch("https://api.tempo.io/trackers/v1/", {
     method: "POST",
     headers: {
@@ -76,7 +84,7 @@ export async function createTracker(token, payload = {}) {
     }),
   }).then((a) => a.json())
 }
-export async function deleteTracker(id, token) {
+export async function deleteTracker(id: string, token: string | null) {
   return fetch(`https://api.tempo.io/trackers/v1/${id}`, {
     method: "DELETE",
     headers: {
@@ -86,7 +94,15 @@ export async function deleteTracker(id, token) {
   })
 }
 
-export async function updateTracker(id, payload, token) {
+export async function updateTracker(
+  id: string,
+  payload: {
+    issueId?: string
+    issueKey?: string
+    description?: string | null
+  },
+  token: string | null
+): Promise<TrackerDto> {
   return fetch(`https://api.tempo.io/trackers/v1/${id}`, {
     method: "PUT",
     headers: {
@@ -97,7 +113,13 @@ export async function updateTracker(id, payload, token) {
   }).then((a) => a.json())
 }
 
-export async function createWorklog(payload, token) {
+export async function createWorklog(
+  payload: {
+    issueKey: string
+    timeSpentSeconds: number
+  },
+  token: string | null
+) {
   const authorAccountId = await getJiraAccountId(token)
   const res = await fetch(`https://api.tempo.io/core/3/worklogs`, {
     method: "POST",
@@ -115,7 +137,7 @@ export async function createWorklog(payload, token) {
   return res
 }
 
-export async function getListIssues(search, token) {
+export async function getListIssues(search: string, token: string | null) {
   const jira = await getJiraToken(token)
   const query = new URLSearchParams()
 
@@ -127,22 +149,24 @@ export async function getListIssues(search, token) {
   query.append("showSubTaskParent", "true")
   query.append("query", search)
 
-  const payload = await fetch(
-    `${jira.client.baseUrl}/rest/api/2/issue/picker?${query}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${jira.token}`,
-      },
-    }
-  ).then((a) => a.json())
+  const payload: {
+    sections: { issues: IssueDto[] }[]
+  } = await fetch(`${jira.client.baseUrl}/rest/api/2/issue/picker?${query}`, {
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${jira.token}`,
+    },
+  }).then((a) => a.json())
 
-  const issues = payload.sections.reduce((memo, section) => {
-    for (const issue of section.issues) {
-      memo.set(issue.id, issue)
-    }
-    return memo
-  }, new Map())
+  const issues = payload.sections.reduce<Map<string, IssueDto>>(
+    (memo, section) => {
+      for (const issue of section.issues) {
+        memo.set(issue.id, issue)
+      }
+      return memo
+    },
+    new Map()
+  )
 
   return [...issues.values()]
 }

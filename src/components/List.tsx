@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react"
 import { Box, Color } from "ink"
 import { useActiveInput } from "../hooks"
 
+interface ListItem {
+  key: string
+  label: string
+}
+
 export const List = ({
   items,
   focus,
@@ -9,6 +14,13 @@ export const List = ({
   onSelect,
   hideOnFocus = true,
   limit = 5,
+}: {
+  items: ListItem[]
+  focus: boolean
+  onHighlight?: (item: ListItem, index: number) => void
+  onSelect: (item: ListItem) => void
+  hideOnFocus?: boolean
+  limit?: number
 }) => {
   const [selectedIndex, setIndex] = useState(0)
   const [pageIndex, setPageIndex] = useState(0)

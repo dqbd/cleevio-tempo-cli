@@ -4,7 +4,7 @@ import { Box } from "ink"
 const DESC_REGEX =
   /\s*cleevio-tempo-cli:<(?<human>.*?)><(?<timestamp>[+-]?[0-9]*)>\s*/gm
 
-export const parseDate = (str) =>
+export const parseDate = (str: string | null) =>
   typeof str === "string" ? Date.parse(`${str}Z`) : null
 
 export const getStartDate = (timestamp = Date.now()) => {
@@ -16,7 +16,7 @@ export const getStartDate = (timestamp = Date.now()) => {
   ].join("-")
 }
 
-export const formatTime = (seconds) => {
+export const formatTime = (seconds: number) => {
   const absSeconds = Math.abs(seconds)
   const h = Math.floor(absSeconds / 3600)
   const m = Math.floor((absSeconds % 3600) / 60)
@@ -26,7 +26,11 @@ export const formatTime = (seconds) => {
   return ` ${result}`
 }
 
-export const getTimeSpent = (trackerDuration, description, now) => {
+export const getTimeSpent = (
+  trackerDuration: { start: string | null; end: string | null }[],
+  description: string,
+  now: number
+) => {
   let len = getDescriptionTime(description)
   for (let { start, end } of trackerDuration) {
     const startVal = parseDate(start)
@@ -39,12 +43,12 @@ export const getTimeSpent = (trackerDuration, description, now) => {
   return len
 }
 
-export const getDescriptionTime = (content) => {
+export const getDescriptionTime = (content: string) => {
   let match = undefined
   let result = 0
   do {
     match = DESC_REGEX.exec(content || "")
-    if (match) {
+    if (match?.groups) {
       result += Number.parseInt(match.groups.timestamp)
     }
   } while (match)
@@ -52,7 +56,10 @@ export const getDescriptionTime = (content) => {
   return result
 }
 
-export const updateDescriptionTime = (content, timestamp) => {
+export const updateDescriptionTime = (
+  content: string | null,
+  timestamp: number
+): string | null => {
   if (content === null && (typeof timestamp !== "number" || timestamp === 0))
     return null
 
@@ -65,14 +72,14 @@ export const updateDescriptionTime = (content, timestamp) => {
   return result
 }
 
-const centerItems = (item, itemWidth, width) => {
+const centerItems = (item: string, itemWidth: number, width: number) => {
   let rightPad = Math.floor((width - itemWidth) / 2)
   let leftPad = width - Math.min(width, itemWidth + rightPad)
 
   return [" ".repeat(leftPad), item, " ".repeat(rightPad)]
 }
 
-export const centerNode = (node, nodeWidth, width) => {
+export const centerNode = (node: string, nodeWidth: number, width: number) => {
   const [left, item, right] = centerItems(node, nodeWidth, width)
   return (
     <Box>
@@ -83,6 +90,6 @@ export const centerNode = (node, nodeWidth, width) => {
   )
 }
 
-export const centerText = (text, width) => {
+export const centerText = (text: string, width: number) => {
   return centerItems(text, text.length, width).join("")
 }

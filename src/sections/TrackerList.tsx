@@ -8,7 +8,7 @@ import {
   useAsyncEffect,
   useLockableInput,
 } from "../hooks"
-import { stateOrder, SELECT_ROW } from "../constants"
+import { stateOrder, State } from "../constants"
 import { TokenContext } from "../context"
 import { parseDate } from "../utils"
 import { getTrackers } from "../api"
@@ -17,10 +17,12 @@ import { Tracker } from "./Tracker"
 import { NewTimer } from "./NewTimer"
 
 import Spinner from "ink-spinner"
+import { TrackerDto } from "types"
 
-const getSortedTrackers = (trackers) => {
+const getSortedTrackers = (trackers: TrackerDto[]) => {
   return (trackers || []).sort(
-    ({ createdDate: a }, { createdDate: b }) => parseDate(a) - parseDate(b)
+    ({ createdDate: a }, { createdDate: b }) =>
+      (parseDate(a) ?? 0) - (parseDate(b) ?? 0)
   )
 }
 
@@ -30,12 +32,12 @@ export const List = () => {
   const [now, setNow] = useState(Date.now())
 
   const [errors, showError] = useState(false)
-  const [trackers, setTrackers] = useState(false)
+  const [trackers, setTrackers] = useState<TrackerDto[] | null>(null)
   const [selected, setSelected] = useState(0)
-  const [row, setRow] = useState(SELECT_ROW)
+  const [row, setRow] = useState<State>(State.SELECT_ROW)
 
   const setSortedTrackers = useCallback(
-    (cb) => {
+    (cb: (value: TrackerDto[] | null) => TrackerDto[]) => {
       if (isMounted.current) {
         setTrackers((trackers) => getSortedTrackers(cb([...(trackers || [])])))
       }
@@ -43,34 +45,36 @@ export const List = () => {
     [isMounted]
   )
 
-  const handleUpdate = (tracker) => {
-    setSortedTrackers((trackers) =>
-      trackers.map((tempTracker) => {
-        if (tempTracker.id === tracker.id) {
-          return tracker
-        }
-        return tempTracker
-      })
+  const handleUpdate = (tracker: TrackerDto) => {
+    setSortedTrackers(
+      (trackers) =>
+        trackers?.map((tempTracker) => {
+          if (tempTracker.id === tracker.id) {
+            return tracker
+          }
+          return tempTracker
+        }) ?? []
     )
   }
 
-  const handleDelete = (tracker) => {
+  const handleDelete = (tracker: TrackerDto) => {
     setSelected((selected) => Math.max(0, selected - 1))
-    setSortedTrackers((trackers) =>
-      trackers.filter((tempTracker) => {
-        return tempTracker.id !== tracker.id
-      })
+    setSortedTrackers(
+      (trackers) =>
+        trackers?.filter((tempTracker) => {
+          return tempTracker.id !== tracker.id
+        }) ?? []
     )
   }
 
-  const handleCreate = (tracker) => {
+  const handleCreate = (tracker: TrackerDto) => {
     setSortedTrackers((trackers) => {
-      trackers.push(tracker)
-      return trackers
+      trackers?.push(tracker)
+      return trackers ?? []
     })
   }
 
-  const fetchTrackers = useCallback(async () => {
+  const fetchTrackers: () => void = useCallback(async () => {
     try {
       const trackers = await getTrackers(token)
       setSortedTrackers(() => trackers)
@@ -118,13 +122,13 @@ export const List = () => {
 
   return (
     <Box flexGrow={1}>
-      {(trackers === false || errors) && (
+      {(trackers === null || errors) && (
         <Text>
           <Spinner type="dots" /> {!errors && "Loading your trackers"}
           {errors && "Failing to load trackers, retrying"}
         </Text>
       )}
-      {trackers !== false && (
+      {trackers !== null && (
         <Box flexDirection="column" flexGrow={1}>
           {trackers.map((tracker, index) => {
             return (

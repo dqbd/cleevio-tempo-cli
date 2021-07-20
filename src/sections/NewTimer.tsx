@@ -2,12 +2,21 @@ import React, { useContext, useCallback, useState } from "react"
 import { Text, Box, Color } from "ink"
 import { createTracker } from "../api"
 import { TokenContext } from "../context"
-import { useActiveInput } from "../hooks"
+import { LockCallback, useActiveInput } from "../hooks"
 import { SearchList } from "./SearchList"
 import { Input } from "../components/Input"
 import Spinner from "ink-spinner"
+import { TrackerDto } from "types"
 
-export const NewTimer = ({ selected, onCreate, lock }) => {
+export const NewTimer = ({
+  selected,
+  onCreate,
+  lock,
+}: {
+  selected: boolean
+  onCreate: (item: TrackerDto) => void
+  lock: LockCallback
+}) => {
   const token = useContext(TokenContext)
   const [loading, setLoading] = useState(false)
 
@@ -36,12 +45,13 @@ export const NewTimer = ({ selected, onCreate, lock }) => {
         }
       }
     },
-    {
-      active: !!selected && !hasSearch,
-    }
+    { active: !!selected && !hasSearch }
   )
 
-  const handleHighlight = (_, index) => {
+  const handleHighlight = (
+    _: { key: string; label: string },
+    index: number
+  ) => {
     if (index !== 0) {
       setActiveList(true)
     } else {
@@ -76,6 +86,7 @@ export const NewTimer = ({ selected, onCreate, lock }) => {
     [token, onCreate, handleChange]
   )
 
+  if (!token) return null
   if (loading)
     return (
       <Text>
@@ -96,7 +107,6 @@ export const NewTimer = ({ selected, onCreate, lock }) => {
       </Color>
       <SearchList
         search={search}
-        token={token}
         focus={!!search?.trim() || focusList}
         preload={selected}
         onSelect={handleItemSelect}

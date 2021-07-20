@@ -7,7 +7,7 @@ import { getListIssues } from "../api"
 import { TokenContext } from "../context"
 import { List } from "../components/List"
 
-const fetchSearchItems = async (search, token) => {
+const fetchSearchItems = async (search: string, token: string) => {
   const items = await getListIssues(search, token)
   return {
     search,
@@ -19,21 +19,27 @@ const fetchSearchItems = async (search, token) => {
   }
 }
 
-export function SearchList({ search, onSelect, onHighlight, preload, focus }) {
+export function SearchList(props: {
+  search?: string
+  onSelect: (item: { key: string; label: string }) => void
+  onHighlight?: (item: { key: string; label: string }, index: number) => void
+  preload: boolean
+  focus: boolean
+}) {
   const token = useContext(TokenContext)
-  const [items, setItems] = useState([])
+  const [items, setItems] = useState<{ key: string; label: string }[]>([])
   const [loading, setLoading] = useState(false)
   const isMounted = useIsMounted()
-  const queryRef = useRef(search)
-  const hasSearch = !!(search && search.trim())
+  const queryRef = useRef(props.search)
+  const hasSearch = !!props.search?.trim()
 
   useEffect(() => {
-    queryRef.current = search
+    queryRef.current = props.search
 
-    if (hasSearch || preload) {
+    if (token && (hasSearch || props.preload)) {
       setItems([])
       setLoading(true)
-      fetchSearchItems(search, token).then((payload) => {
+      fetchSearchItems(props.search ?? "", token).then((payload) => {
         if (queryRef.current === payload.search && isMounted.current) {
           setItems(payload.items)
           setLoading(false)
@@ -42,9 +48,9 @@ export function SearchList({ search, onSelect, onHighlight, preload, focus }) {
     } else {
       isMounted.current && setItems([])
     }
-  }, [hasSearch, preload, search, setLoading, queryRef, isMounted])
+  }, [hasSearch, props.preload, props.search, setLoading, queryRef, isMounted])
 
-  if (!focus && !preload) {
+  if (!props.focus && !props.preload) {
     return null
   }
 
@@ -52,9 +58,9 @@ export function SearchList({ search, onSelect, onHighlight, preload, focus }) {
     <>
       <List
         items={items}
-        focus={focus}
-        onHighlight={onHighlight}
-        onSelect={onSelect}
+        focus={props.focus}
+        onHighlight={props.onHighlight}
+        onSelect={props.onSelect}
         limit={5}
       />
       {loading && (
