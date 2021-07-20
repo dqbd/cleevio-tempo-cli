@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react"
 import Conf from "conf"
 
-import { AppContext } from "ink"
+import { useApp } from "ink"
 import { TokenContext } from "../context"
 import { List } from "./TrackerList"
 import { Login } from "./Login"
@@ -33,7 +33,7 @@ class ErrorBoundary extends React.Component<{
 }
 
 const InternalApp = ({ logout }: { logout: boolean; debug: boolean }) => {
-  const [token, setToken] = useState(!logout ? config.get("tempoToken") : "")
+  const [token, setToken] = useState(logout ? "" : config.get("tempoToken"))
   const handleToken = useCallback(
     (newToken) => {
       config.set("tempoToken", newToken)
@@ -60,12 +60,11 @@ const InternalApp = ({ logout }: { logout: boolean; debug: boolean }) => {
   )
 }
 
-export const App = (props: { logout: boolean; debug: boolean }) => (
-  <AppContext.Consumer>
-    {({ exit }) => (
-      <ErrorBoundary exit={exit}>
-        <InternalApp {...props} />
-      </ErrorBoundary>
-    )}
-  </AppContext.Consumer>
-)
+export const App = (props: { logout: boolean; debug: boolean }) => {
+  const appProps = useApp()
+  return (
+    <ErrorBoundary exit={appProps.exit}>
+      <InternalApp {...props} />
+    </ErrorBoundary>
+  )
+}

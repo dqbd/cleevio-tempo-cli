@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext } from "react"
-import { Text, Color, Box } from "ink"
+import { Text, Box } from "ink"
 import parseDuration from "parse-duration"
 import open from "open"
 
@@ -24,6 +24,40 @@ import { TokenContext } from "../context"
 import { SearchList } from "./SearchList"
 import { Input } from "../components/Input"
 import { TrackerDto } from "types"
+
+function getStateColorProps(toggleState: boolean, isPlaying: boolean) {
+  let color = undefined
+  let backgroundColor = undefined
+
+  if (toggleState) {
+    color = "white"
+  } else {
+    color = isPlaying ? "yellow" : "green"
+  }
+
+  if (toggleState) {
+    backgroundColor = isPlaying ? "yellow" : "green"
+  }
+
+  return { color, backgroundColor }
+}
+
+function getLogColorProps(toggleLog: boolean, hasIssueKey: boolean) {
+  let color = undefined
+  let backgroundColor = undefined
+
+  if (toggleLog) {
+    color = hasIssueKey ? "white" : "inverse"
+  } else {
+    color = hasIssueKey ? "blue" : "gray"
+  }
+
+  if (toggleLog && hasIssueKey) {
+    backgroundColor = "blue"
+  }
+
+  return { color, backgroundColor }
+}
 
 export function Tracker({
   tracker,
@@ -190,7 +224,7 @@ export function Tracker({
     <Box flexDirection="column">
       <Box key={tracker.id}>
         <Box>
-          <Color bgGreen={tracker.isPlaying} bgRed={!tracker.isPlaying}>
+          <Text backgroundColor={tracker.isPlaying ? "green" : "red"}>
             <Input
               value={time}
               loading={loadEvent?.row === State.SELECT_TIME}
@@ -209,37 +243,32 @@ export function Tracker({
               focus={toggleTime}
               onSubmit={handleTimeSubmit}
             />
-          </Color>
-        </Box>
-        <Color
-          white={toggleState}
-          yellow={!toggleState && tracker.isPlaying}
-          bgYellow={toggleState && tracker.isPlaying}
-          green={!toggleState && !tracker.isPlaying}
-          bgGreen={toggleState && !tracker.isPlaying}
-        >
-          <Text bold={!!toggleState}>{state}</Text>
-        </Color>
-        <Color
-          white={toggleLog}
-          gray={!toggleLog && !tracker.issueKey}
-          inverse={toggleLog && !tracker.issueKey}
-          blue={!toggleLog && !!tracker.issueKey}
-          bgBlue={toggleLog && !!tracker.issueKey}
-        >
-          <Text bold={!!(toggleLog && tracker.issueKey)}>
-            {loadEvent?.row !== State.LOG && centerText("Log Time", 10)}
-            {loadEvent?.row === State.LOG &&
-              centerText(loadEvent?.value || "Logging", 10)}
           </Text>
-        </Color>
-        <Color red={!toggleDelete} bgRed={toggleDelete} white={toggleDelete}>
+        </Box>
+        <Text
+          bold={!!toggleState}
+          {...getStateColorProps(toggleState, tracker.isPlaying)}
+        >
+          {state}
+        </Text>
+        <Text
+          bold={!!(toggleLog && tracker.issueKey)}
+          {...getLogColorProps(toggleLog, !!tracker.issueKey)}
+        >
+          {loadEvent?.row !== State.LOG && centerText("Log Time", 10)}
+          {loadEvent?.row === State.LOG &&
+            centerText(loadEvent?.value || "Logging", 10)}
+        </Text>
+        <Text
+          backgroundColor={toggleDelete ? "red" : undefined}
+          color={toggleDelete ? "white" : "red"}
+        >
           <Text bold={!!toggleDelete}>
             {loadEvent?.row === State.DELETE && centerText("Deleting", 10)}
             {loadEvent?.row !== State.DELETE && centerText("Delete", 10)}
           </Text>
-        </Color>
-        <Color bgBlue={toggleIssue}>
+        </Text>
+        <Text backgroundColor={toggleIssue ? "blue" : undefined}>
           <Input
             value={search}
             onChange={handleSearchChange}
@@ -251,7 +280,7 @@ export function Tracker({
             focus={toggleIssue}
           />
           {toggleIssue ? "(open browser) " : ""}
-        </Color>
+        </Text>
       </Box>
       <SearchList
         search={search}

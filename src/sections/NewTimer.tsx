@@ -1,5 +1,5 @@
 import React, { useContext, useCallback, useState } from "react"
-import { Text, Box, Color } from "ink"
+import { Text, Box } from "ink"
 import { createTracker } from "../api"
 import { TokenContext } from "../context"
 import { LockCallback, useActiveInput } from "../hooks"
@@ -93,9 +93,14 @@ export const NewTimer = ({
         <Spinner type="dots" /> Creating a new timer...
       </Text>
     )
+
+  let color = undefined
+  if (!selected) color = "gray"
+  if (!search?.trim() && !focusList && selected) color = "blue"
+
   return (
     <Box flexDirection="column">
-      <Color gray={!selected} blue={!search?.trim() && !focusList && selected}>
+      <Text color={color}>
         {`[${selected ? "+" : " "}]`}
         <Input
           value={search}
@@ -104,7 +109,7 @@ export const NewTimer = ({
           focus={selected}
         />
         {selected && !search && "(or type an issue)"}
-      </Color>
+      </Text>
       <SearchList
         search={search}
         focus={!!search?.trim() || focusList}

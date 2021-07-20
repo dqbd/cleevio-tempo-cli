@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Box, Color } from "ink"
+import { Box, Text } from "ink"
 import { useActiveInput } from "../hooks"
 
 interface ListItem {
@@ -83,11 +83,14 @@ export const List = ({
         .map(({ key, label }, relIndex) => {
           const index = relIndex + pageIndex
           const showActive = (!hideOnFocus || focus) && selectedIndex === index
+          let color
+          if (showActive) color = "blue"
+          if (hideOnFocus && !focus) color = "gray"
           return (
-            <Color key={key} blue={showActive} gray={hideOnFocus && !focus}>
+            <Text key={key} color={color}>
               {showActive ? "> " : "  "}
               {label}
-            </Color>
+            </Text>
           )
         })}
     </Box>

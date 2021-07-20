@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Text, Box, Color } from "ink"
+import { Text, Box } from "ink"
 import Spinner from "ink-spinner"
 
 import { Input } from "../components/Input"
@@ -30,10 +30,10 @@ export const Login = ({ onToken }: { onToken: (token: string) => void }) => {
 
   return (
     <Box flexDirection="column">
-      <Color gray>Please enter your Tempo API Token</Color>
-      <Color blue>
+      <Text color="gray">Please enter your Tempo API Token</Text>
+      <Text color="blue">
         https://cleevio.atlassian.net/plugins/servlet/ac/io.tempo.jira/tempo-configuration
-      </Color>{" "}
+      </Text>
       {loading && (
         <Text>
           <Spinner type="dots" /> Logging in
@@ -41,8 +41,10 @@ export const Login = ({ onToken }: { onToken: (token: string) => void }) => {
       )}
       {!loading && (
         <Box>
-          {!errors && "Token key:"}
-          {errors && "Login failed, try again:"}
+          <Text>
+            {!errors && "Token key:"}
+            {errors && "Login failed, try again:"}
+          </Text>
           <Input
             value={value}
             onChange={handleChange}

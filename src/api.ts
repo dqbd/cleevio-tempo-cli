@@ -58,7 +58,7 @@ export async function toggleTracker(
   }).then((a) => a.json())
 }
 
-export async function getTrackers(token: string | null): Promise<TrackerDto> {
+export async function getTrackers(token: string | null): Promise<TrackerDto[]> {
   return fetch("https://api.tempo.io/trackers/v1/", {
     method: "GET",
     headers: {

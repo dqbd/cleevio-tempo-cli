@@ -1,5 +1,5 @@
-import React, { useEffect, useContext, useRef, useState } from "react"
-import { StdinContext } from "ink"
+import React, { useEffect, useRef, useState } from "react"
+import { useStdin } from "ink"
 
 export function usePrevious<T>(value: T) {
   const ref = useRef<T>()
@@ -61,7 +61,7 @@ export const useActiveInput = (
   inputHandler: InputHandler,
   { active = true } = {}
 ) => {
-  const { stdin, setRawMode } = useContext(StdinContext)
+  const { stdin, setRawMode } = useStdin()
 
   useEffect(() => {
     if (!active) {
@@ -114,10 +114,10 @@ export const useActiveInput = (
       inputHandler(input, key, String(data))
     }
 
-    stdin.on("data", handleData)
+    stdin?.on("data", handleData)
 
     return () => {
-      stdin.off("data", handleData)
+      stdin?.off("data", handleData)
     }
   }, [active, stdin, inputHandler])
 
