@@ -7,7 +7,7 @@
     "node": ">=8"
   },
   "scripts": {
-    "build": "babel src --out-dir dist",
+    "build": "babel src --out-dir dist --extensions '.ts,.tsx'",
     "build:binaries": "pkg --out-path bin/ package.json",
     "lint": "eslint src"
   },
@@ -30,6 +30,7 @@
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.14.5",
     "@babel/cli": "^7.14.8",
     "@babel/core": "^7.14.8",
     "@babel/plugin-transform-runtime": "^7.14.5",
