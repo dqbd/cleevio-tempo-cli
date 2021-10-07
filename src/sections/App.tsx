@@ -3,7 +3,7 @@ import Conf from "conf"
 
 import { useApp } from "ink"
 import { TokenContext } from "../context"
-import { List } from "./TrackerList"
+import { TrackerList } from "./TrackerList"
 import { Login } from "./Login"
 
 import pkg from "../../package.json"
@@ -55,7 +55,7 @@ const InternalApp = ({ logout }: { logout: boolean; debug: boolean }) => {
 
   return (
     <TokenContext.Provider value={token}>
-      <List />
+      <TrackerList />
     </TokenContext.Provider>
   )
 }

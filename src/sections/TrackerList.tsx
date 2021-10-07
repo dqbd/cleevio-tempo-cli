@@ -26,7 +26,7 @@ const getSortedTrackers = (trackers: TrackerDto[]) => {
   )
 }
 
-export const List = () => {
+export const TrackerList = () => {
   const token = useContext(TokenContext)
   const isMounted = useIsMounted()
   const [now, setNow] = useState(Date.now())
@@ -118,7 +118,7 @@ export const List = () => {
 
   useAsyncEffect(fetchTrackers, [])
   useInterval(fetchTrackers, 60 * 1000)
-  useInterval(() => setNow(Date.now()), 100)
+  useInterval(() => setNow(Date.now()), 1000)
 
   return (
     <Box flexGrow={1}>
