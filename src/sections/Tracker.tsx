@@ -59,6 +59,16 @@ function getLogColorProps(toggleLog: boolean, hasIssueKey: boolean) {
   return { color, backgroundColor }
 }
 
+interface Props {
+  tracker: TrackerDto
+  selected: boolean
+  onUpdate: (tracker: TrackerDto) => void
+  onDelete: (tracker: TrackerDto) => void
+  lock: LockCallback
+  now: number
+  row: State
+}
+
 export function Tracker({
   tracker,
   selected,
@@ -67,15 +77,7 @@ export function Tracker({
   lock,
   now,
   row,
-}: {
-  tracker: TrackerDto
-  selected: boolean
-  onUpdate: (tracker: TrackerDto) => void
-  onDelete: (tracker: TrackerDto) => void
-  lock: LockCallback
-  now: number
-  row: State
-}) {
+}: Props) {
   const toggleTime = selected && row === State.SELECT_TIME
   const toggleState = selected && row === State.SELECT_ROW
   const toggleIssue = selected && row === State.CHANGE_ISSUE

@@ -5,7 +5,11 @@ import Spinner from "ink-spinner"
 import { Input } from "../components/Input"
 import { getTrackers } from "../api"
 
-export const Login = ({ onToken }: { onToken: (token: string) => void }) => {
+interface Props {
+  onToken: (token: string) => void
+}
+
+export const Login = ({ onToken }: Props) => {
   const [loading, setLoading] = useState(false)
   const [errors, showErrors] = useState(false)
   const [value, setValue] = useState("")

@@ -4,6 +4,18 @@ import chalk from "chalk"
 import { useActiveInput } from "../hooks"
 import Spinner from "ink-spinner"
 
+interface Props {
+  value: string
+  loading?: boolean
+  onChange: (value: string) => void
+  onSubmit?: () => void
+  placeholder?: string
+  focus?: boolean
+  minWidth?: number
+  spacing?: boolean
+  loadingPlaceholder?: string
+}
+
 export const Input = ({
   value,
   loading,
@@ -14,17 +26,7 @@ export const Input = ({
   minWidth = 0,
   spacing = true,
   loadingPlaceholder = "Loading",
-}: {
-  value: string
-  loading?: boolean
-  onChange: (value: string) => void
-  onSubmit?: () => void
-  placeholder?: string
-  focus?: boolean
-  minWidth?: number
-  spacing?: boolean
-  loadingPlaceholder?: string
-}) => {
+}: Props) => {
   const [cursorOffset, setCursorOffset] = useState(value?.length || 0)
   const hasValue = (value || "").length > 0
 

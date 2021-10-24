@@ -8,15 +8,13 @@ import { Input } from "../components/Input"
 import Spinner from "ink-spinner"
 import { TrackerDto } from "types"
 
-export const NewTimer = ({
-  selected,
-  onCreate,
-  lock,
-}: {
+interface Props {
   selected: boolean
   onCreate: (item: TrackerDto) => void
   lock: LockCallback
-}) => {
+}
+
+export const NewTimer = ({ selected, onCreate, lock }: Props) => {
   const token = useContext(TokenContext)
   const [loading, setLoading] = useState(false)
 

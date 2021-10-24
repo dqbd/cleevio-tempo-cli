@@ -7,6 +7,15 @@ interface ListItem {
   label: string
 }
 
+interface Props {
+  items: ListItem[]
+  focus: boolean
+  onHighlight?: (item: ListItem, index: number) => void
+  onSelect: (item: ListItem) => void
+  hideOnFocus?: boolean
+  limit?: number
+}
+
 export const List = ({
   items,
   focus,
@@ -14,14 +23,7 @@ export const List = ({
   onSelect,
   hideOnFocus = true,
   limit = 5,
-}: {
-  items: ListItem[]
-  focus: boolean
-  onHighlight?: (item: ListItem, index: number) => void
-  onSelect: (item: ListItem) => void
-  hideOnFocus?: boolean
-  limit?: number
-}) => {
+}: Props) => {
   const [selectedIndex, setIndex] = useState(0)
   const [pageIndex, setPageIndex] = useState(0)
 

@@ -32,7 +32,12 @@ class ErrorBoundary extends React.Component<{
   }
 }
 
-const InternalApp = ({ logout }: { logout: boolean; debug: boolean }) => {
+interface Props {
+  logout: boolean
+  debug: boolean
+}
+
+const InternalApp = ({ logout }: Props) => {
   const [token, setToken] = useState(logout ? "" : config.get("tempoToken"))
   const handleToken = useCallback(
     (newToken) => {
