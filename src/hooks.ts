@@ -34,7 +34,7 @@ export function useInterval(callback: () => void, delay: number) {
       savedCallback.current?.()
     }
     if (delay !== null) {
-      let id = setInterval(tick, delay)
+      const id = setInterval(tick, delay)
       return () => clearInterval(id)
     }
     return void 0
@@ -170,8 +170,10 @@ export const useAsyncEffect = (
   deps?: React.DependencyList
 ): void => {
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
       await callback()
     })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }

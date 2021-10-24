@@ -48,7 +48,15 @@ export function SearchList(props: {
     } else {
       isMounted.current && setItems([])
     }
-  }, [hasSearch, props.preload, props.search, setLoading, queryRef, isMounted])
+  }, [
+    token,
+    hasSearch,
+    props.preload,
+    props.search,
+    setLoading,
+    queryRef,
+    isMounted,
+  ])
 
   if (!props.focus && !props.preload) {
     return null

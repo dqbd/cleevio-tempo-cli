@@ -32,7 +32,7 @@ export const getTimeSpent = (
   now: number
 ) => {
   let len = getDescriptionTime(description)
-  for (let { start, end } of trackerDuration) {
+  for (const { start, end } of trackerDuration) {
     const startVal = parseDate(start)
     const endVal = parseDate(end) || now
 
@@ -73,8 +73,8 @@ export const updateDescriptionTime = (
 }
 
 const centerItems = (item: string, itemWidth: number, width: number) => {
-  let rightPad = Math.floor((width - itemWidth) / 2)
-  let leftPad = width - Math.min(width, itemWidth + rightPad)
+  const rightPad = Math.floor((width - itemWidth) / 2)
+  const leftPad = width - Math.min(width, itemWidth + rightPad)
 
   return [" ".repeat(leftPad), item, " ".repeat(rightPad)]
 }

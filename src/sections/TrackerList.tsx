@@ -82,7 +82,7 @@ export const TrackerList = () => {
     } catch {
       if (isMounted.current) showError(true)
     }
-  }, [token])
+  }, [token, isMounted, setSortedTrackers])
 
   const lock = useLockableInput((_, key) => {
     const trackersLen = (trackers || []).length

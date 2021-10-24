@@ -175,7 +175,7 @@ export function Tracker({
       }
       handleSearchChange("")
     },
-    [tracker.id, onUpdate, token]
+    [tracker.id, onUpdate, handleSearchChange, token]
   )
 
   const handleTimeChange = useCallback(
@@ -206,15 +206,17 @@ export function Tracker({
       handleTimeChange("")
       setLoadEvent(null)
     }
-  }, [time, token, onUpdate, tracker])
+  }, [time, token, onUpdate, handleTimeChange, isMounted, tracker])
+
+  const hasIssueKey = !!tracker?.issueKey
 
   useEffect(() => {
     if (!toggleIssue) {
       handleSearchChange("")
     } else {
-      lock({ y: !tracker?.issueKey })
+      lock({ y: !hasIssueKey })
     }
-  }, [handleSearchChange, toggleIssue, !tracker?.issueKey])
+  }, [handleSearchChange, toggleIssue, lock, hasIssueKey])
 
   let state: string | undefined = tracker.isPlaying ? "Stop" : "Play"
   if (loadEvent && loadEvent.row === State.SELECT_ROW) state = loadEvent.value
