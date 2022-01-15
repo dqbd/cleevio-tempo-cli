@@ -23,3 +23,8 @@ export interface JiraTokenDto {
 export interface JiraAccountDto {
   accountId: string
 }
+export interface Config {
+  token: string
+  username: string
+  password: string
+}

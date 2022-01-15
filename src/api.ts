@@ -1,45 +1,60 @@
 import fetch from "node-fetch"
-import { IssueDto, JiraAccountDto, JiraTokenDto, TrackerDto } from "types"
+import { Config, IssueDto, JiraAccountDto, TrackerDto } from "types"
 import { URLSearchParams } from "url"
 import { getStartDate } from "./utils"
 
-const getJiraToken = (() => {
-  let cache: Promise<JiraTokenDto> | null = null
-  let obtained = 0
+const JIRA_BASE_URL = "https://cleevio.atlassian.net"
 
-  return async (token: string | null) => {
-    const now = Date.now()
-    // TODO: move to redux state
-    if (!cache || now - obtained > 1000 * 60 * 10) {
-      cache = fetch(`https://api.tempo.io/jira/v1/get-jira-oauth-token/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${token}`,
-        },
-      }).then((a) => a.json())
-      obtained = Date.now()
-    }
+function getJiraBasicToken(token: Pick<Config, "username" | "password">) {
+  return Buffer.from([token.username, token.password].join(":")).toString(
+    "base64"
+  )
+}
 
-    return await cache
+function fetchTempo(token: Pick<Config, "token">) {
+  return (...parameters: Parameters<typeof fetch>) => {
+    const [path, args] = parameters
+    return fetch(`https://api.tempo.io${path}`, {
+      ...args,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.token}`,
+        ...args?.headers,
+      },
+    })
   }
-})()
+}
 
-const getJiraAccountId = (() => {
+function fetchJira(token: Pick<Config, "username" | "password">) {
+  return (...parameters: Parameters<typeof fetch>) => {
+    const [path, args] = parameters
+    return fetch(`${JIRA_BASE_URL}${path}`, {
+      ...args,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${getJiraBasicToken(token)}`,
+        ...args?.headers,
+      },
+    })
+  }
+}
+
+export async function getJiraMyself(token: Config) {
+  const res = await fetchJira(token)(`/rest/api/3/myself`, {
+    method: "GET",
+  })
+
+  if (!res.ok) throw new Error("Response is not OK")
+  return res.json()
+}
+
+const getCachedJiraAccountId = (() => {
   let result: string | null = null
-  return async (token: string | null) => {
+  return async (token: Config) => {
     if (!result) {
-      const jira = await getJiraToken(token)
-      const { accountId }: JiraAccountDto = await fetch(
-        `${jira.client.baseUrl}/rest/api/3/myself`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            authorization: `Bearer ${jira.token}`,
-          },
-        }
-      ).then((a) => a.json())
-      result = accountId
+      const res = await getJiraMyself(token)
+      const data: JiraAccountDto = await res.json()
+      result = data.accountId
     }
     return result
   }
@@ -47,51 +62,35 @@ const getJiraAccountId = (() => {
 
 export async function toggleTracker(
   id: string,
-  token: string | null
+  token: Config
 ): Promise<TrackerDto> {
-  return fetch(`https://api.tempo.io/trackers/v1/${id}/toggle`, {
+  const res = await fetchTempo(token)(`/trackers/v1/${id}/toggle`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-  }).then((a) => a.json())
+  })
+  return res.json()
 }
 
-export async function getTrackers(token: string | null): Promise<TrackerDto[]> {
-  return fetch("https://api.tempo.io/trackers/v1/", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-  }).then((a) => a.json())
+export async function getTrackers(token: Config): Promise<TrackerDto[]> {
+  const res = await fetchTempo(token)("/trackers/v1/")
+  return res.json()
 }
 
 export async function createTracker(
-  token: string | null,
+  token: Config,
   payload: { issueId?: string; issueKey?: string } = {}
 ): Promise<TrackerDto> {
-  return fetch("https://api.tempo.io/trackers/v1/", {
+  const res = await fetchTempo(token)("/trackers/v1/", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({
       isPlaying: true,
       ...payload,
     }),
-  }).then((a) => a.json())
-}
-export async function deleteTracker(id: string, token: string | null) {
-  return fetch(`https://api.tempo.io/trackers/v1/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
   })
+
+  return res.json()
+}
+export async function deleteTracker(id: string, token: Config) {
+  return fetchTempo(token)(`/trackers/v1/${id}`, { method: "DELETE" })
 }
 
 export async function updateTracker(
@@ -101,16 +100,14 @@ export async function updateTracker(
     issueKey?: string
     description?: string | null
   },
-  token: string | null
+  token: Config
 ): Promise<TrackerDto> {
-  return fetch(`https://api.tempo.io/trackers/v1/${id}`, {
+  const res = await fetchTempo(token)(`/trackers/v1/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload || {}),
-  }).then((a) => a.json())
+    body: JSON.stringify(payload),
+  })
+
+  return res.json()
 }
 
 export async function createWorklog(
@@ -118,27 +115,22 @@ export async function createWorklog(
     issueKey: string
     timeSpentSeconds: number
   },
-  token: string | null
+  token: Config
 ) {
-  const authorAccountId = await getJiraAccountId(token)
-  const res = await fetch(`https://api.tempo.io/core/3/worklogs`, {
+  const authorAccountId = await getCachedJiraAccountId(token)
+  const res = await fetchTempo(token)(`/core/3/worklogs`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({
       authorAccountId,
       startDate: getStartDate(),
       ...payload,
     }),
-  }).then((a) => a.json())
+  })
 
-  return res
+  return res.json()
 }
 
-export async function getListIssues(search: string, token: string | null) {
-  const jira = await getJiraToken(token)
+export async function getListIssues(search: string, token: Config) {
   const query = new URLSearchParams()
 
   query.append(
@@ -149,14 +141,10 @@ export async function getListIssues(search: string, token: string | null) {
   query.append("showSubTaskParent", "true")
   query.append("query", search)
 
+  const res = await fetchJira(token)(`/rest/api/2/issue/picker?${query}`)
   const payload: {
     sections: { issues: IssueDto[] }[]
-  } = await fetch(`${jira.client.baseUrl}/rest/api/2/issue/picker?${query}`, {
-    headers: {
-      "Content-Type": "application/json",
-      authorization: `Bearer ${jira.token}`,
-    },
-  }).then((a) => a.json())
+  } = await res.json()
 
   const issues = payload.sections.reduce<Map<string, IssueDto>>(
     (memo, section) => {

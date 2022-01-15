@@ -7,6 +7,7 @@ import { TrackerList } from "./TrackerList"
 import { Login } from "./Login"
 
 import pkg from "../../package.json"
+import { Config } from "types"
 
 const config = new Conf<{ tempoToken: string }>({
   schema: {
@@ -36,13 +37,14 @@ interface Props {
   logout: boolean
   debug: boolean
 }
-
 const InternalApp = ({ logout }: Props) => {
-  const [token, setToken] = useState(logout ? "" : config.get("tempoToken"))
-  const handleToken = useCallback(
-    (newToken) => {
-      config.set("tempoToken", newToken)
-      setToken(newToken)
+  const [token, setToken] = useState<Config | null>(
+    logout ? null : config.get("config")
+  )
+  const handleConfig = useCallback(
+    (newConfig) => {
+      config.set("config", newConfig)
+      setToken(newConfig)
     },
     [setToken]
   )
@@ -50,12 +52,12 @@ const InternalApp = ({ logout }: Props) => {
   useEffect(() => {
     if (logout) {
       config.clear()
-      setToken("")
+      setToken(null)
     }
   }, [logout])
 
   if (!token) {
-    return <Login onToken={handleToken} />
+    return <Login onConfig={handleConfig} />
   }
 
   return (

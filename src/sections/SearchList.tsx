@@ -6,8 +6,9 @@ import { useIsMounted } from "../hooks"
 import { getListIssues } from "../api"
 import { TokenContext } from "../context"
 import { List } from "../components/List"
+import { Config } from "types"
 
-const fetchSearchItems = async (search: string, token: string) => {
+const fetchSearchItems = async (search: string, token: Config) => {
   const items = await getListIssues(search, token)
   return {
     search,

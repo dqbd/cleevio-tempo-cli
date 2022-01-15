@@ -1,2 +1,7 @@
 import { createContext } from "react"
-export const TokenContext = createContext<string | null>(null)
+import { Config } from "types"
+export const TokenContext = createContext<Config>({
+  password: "",
+  username: "",
+  token: "",
+})
