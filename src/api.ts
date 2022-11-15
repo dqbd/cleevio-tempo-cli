@@ -2,8 +2,10 @@ import fetch from "node-fetch"
 import { Config, IssueDto, JiraAccountDto, TrackerDto } from "types"
 import { URLSearchParams } from "url"
 import { getStartDate } from "./utils"
+import levenshtein from "js-levenshtein"
 
 const JIRA_BASE_URL = "https://cleevio.atlassian.net"
+const JIRA_CLOUD_ID = "77d3c98b-9b87-406b-8845-54d3c243897a"
 
 function getJiraBasicToken(token: Pick<Config, "username" | "password">) {
   return Buffer.from([token.username, token.password].join(":")).toString(
@@ -39,7 +41,7 @@ function fetchJira(token: Pick<Config, "username" | "password">) {
   }
 }
 
-export async function getJiraMyself(token: Config) {
+export async function getJiraMyself(token: Config): Promise<JiraAccountDto> {
   const res = await fetchJira(token)(`/rest/api/3/myself`, {
     method: "GET",
   })
@@ -52,8 +54,7 @@ const getCachedJiraAccountId = (() => {
   let result: string | null = null
   return async (token: Config) => {
     if (!result) {
-      const res = await getJiraMyself(token)
-      const data: JiraAccountDto = await res.json()
+      const data = await getJiraMyself(token)
       result = data.accountId
     }
     return result
@@ -130,7 +131,51 @@ export async function createWorklog(
   return res.json()
 }
 
-export async function getListIssues(search: string, token: Config) {
+async function getXPSearchIssues(
+  query: string,
+  token: Config
+): Promise<IssueDto[]> {
+  const res = await fetchJira(token)(
+    `/gateway/api/xpsearch-aggregator/quicksearch/v1`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        query,
+        cloudId: JIRA_CLOUD_ID,
+        limit: 10,
+        scopes: ["jira.issue"],
+      }),
+    }
+  )
+
+  if (!res.ok) return []
+
+  const payload: {
+    scopes: Array<{
+      id: string
+      results: Array<{
+        id: string
+        name: string
+        url: string
+        attributes: {
+          key: string
+        }
+      }>
+    }>
+  } = await res.json()
+
+  return (
+    payload.scopes
+      .find((i) => i.id === "jira.issue")
+      ?.results.map((i) => ({
+        id: i.id,
+        summaryText: i.name,
+        key: i.attributes.key,
+      })) ?? []
+  )
+}
+
+async function getPickerIssues(search: string, token: Config) {
   const query = new URLSearchParams()
 
   query.append(
@@ -157,4 +202,32 @@ export async function getListIssues(search: string, token: Config) {
   )
 
   return [...issues.values()]
+}
+
+export async function getListIssues(search: string, token: Config) {
+  const set = new Set<string>([])
+  const list = (
+    await Promise.allSettled([
+      getPickerIssues(search, token),
+      getXPSearchIssues(search, token),
+    ])
+  )
+    .map((r) => (r.status === "fulfilled" ? r.value : []))
+    .flat(2)
+    .filter((x) => {
+      if (set.has(x.key)) return false
+      set.add(x.key)
+      return true
+    })
+
+  // calculate levenstein if search can be considered a JIRA issue key
+  if (search.match(/[A-Z]{2,5}(-[0-9]+)?/)) {
+    return list.sort((a, b) => {
+      const l = levenshtein(search, a.key) - levenshtein(search, b.key)
+      if (l != 0) return l
+      return a.key.localeCompare(b.key)
+    })
+  }
+
+  return list
 }
